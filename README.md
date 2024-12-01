@@ -1,12 +1,25 @@
 # tools.simpleweb3.ch
 
+## To Run 
 
+### Pre-Requisites
+> 1. Nodejs version 20+
 
-# Using React + Vite
+### Installation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+```bash
+npm install
+```
 
-Currently, two official plugins are available:
+### Have a environment variable 
+```bash
+mv .env.example .env
+# DONT FORGET TO UPDATE ENVIRONMENT VARIABLE 
+# FETCH THE PROJECT ID FROM https://cloud.walletconnect.com/
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Start the website
+
+```bash
+npm start dev
+```
