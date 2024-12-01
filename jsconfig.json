@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "allowJs": true,
+      "forceConsistentCasingInFileNames": true,
+      "baseUrl": "./",
+      "paths": {
+        "@app/*": ["src/app/*"],
+        "@assets/*": ["src/assets/*"],
+        // "@components/*": ["./src/components/*"],
+        // "@images/*": ["./src/images/*"],
+        // "@utils/*": ["./src/utils/*"],
+        // "@styles/*": ["./src/styles/*"]
+      }
+    }
+  }
