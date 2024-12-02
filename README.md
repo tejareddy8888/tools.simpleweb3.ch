@@ -18,9 +18,23 @@ mv .env.example .env
 # FETCH THE PROJECT ID FROM https://cloud.walletconnect.com/
 ```
 
-### Start the website
+### Start the website for development
 
 ```bash
-npm start dev
+npm run dev
+```
+
+### Start the website for production(Two Steps)
+
+first build
+```bash
+npm run build 
+```
+
+then preview
+```bash
+npm run preview 
+```
+
 ```
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTransaction } from '../context/transactionContext';
+import { useTransaction } from '../context/TransactionContext';
 
 const TransactionDetailsInput = () => {
   const { toAddress, setToAddress, data, setData, valueInWei, setEthValue, validateInputs } = useTransaction();
