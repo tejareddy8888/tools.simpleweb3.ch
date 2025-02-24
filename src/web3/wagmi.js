@@ -9,7 +9,7 @@ import {
 } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
-  appName: 'RainbowKit demo',
+  appName: 'tools.simpleweb3.ch',
   projectId: import.meta.env.TOOLS_PROJECT_ID,
   chains: [
     mainnet,
@@ -17,5 +17,6 @@ export const config = getDefaultConfig({
     optimism,
     arbitrum,
     base,
+    sepolia
   ],
 });

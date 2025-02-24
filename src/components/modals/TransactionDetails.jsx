@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTransaction } from '../context/TransactionContext';
+import { useTransaction } from '../../context/TransactionContextCore';
 
 const TransactionDetailsInput = () => {
   const { toAddress, setToAddress, data, setData, valueInWei, setEthValue, validateInputs } = useTransaction();
@@ -18,7 +18,7 @@ const TransactionDetailsInput = () => {
   // };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-xl">
       <form onSubmit={validateInputs} className="space-y-4">
         <div>
           <label htmlFor="toAddress" className="block text-sm font-medium text-gray-700">To:</label>
