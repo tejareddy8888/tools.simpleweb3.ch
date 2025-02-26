@@ -26,11 +26,8 @@ const Body = () => {
     data: transactionData,
     error: transactionError,
     sendTransaction,
-    config: transactionConfig,
   } = useSendTransaction(config);
 
-  console.log(`Transaction details: `);
-  console.dir(transactionConfig, { depth: 2 });
 
   const [validationPassed, setValidationPassed] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
