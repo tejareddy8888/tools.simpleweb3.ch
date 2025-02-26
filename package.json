@@ -20,7 +20,7 @@
   "homepage": "https://github.com/tejareddy8888/tools.simpleweb3.ch#readme",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview"
   },
