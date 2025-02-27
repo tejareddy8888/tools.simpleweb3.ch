@@ -20,9 +20,4 @@ export default defineConfig({
         port: 4173 // Match this with your Docker EXPOSE port
     },
     logLevel: 'info', // Set to 'info' for more verbose logging
-    customLogger: {
-        info: (msg) => writeLog(`INFO: ${msg}`),
-        warn: (msg) => writeLog(`WARN: ${msg}`),
-        error: (msg) => writeLog(`ERROR: ${msg}`),
-    }
 })
