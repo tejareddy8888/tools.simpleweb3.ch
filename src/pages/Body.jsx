@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { parseEther } from 'viem';
 import { useSendTransaction, usePrepareTransactionRequest } from 'wagmi'
-import TransactionDetailsInput from '../components/modals/TransactionDetails';
-import GasDetailsOutput from '../components/modals/GasDetails';
-import ErrorDetails from '../components/modals/ErrorDetails';
 import ValidateButton from '../components/buttons/ValidateButton';
 import SendToNetworkButton from '../components/buttons/SendToNetworkButton';
 import { useTransaction } from '../context/TransactionContextCore';
 import { CustomNetworkAlert } from '../components/custom/alert';
 
+// Lazy load components
+const TransactionDetailsInput = lazy(() => import('../components/modals/TransactionDetails'));
+const GasDetailsOutput = lazy(() => import('../components/modals/GasDetails'));
+const ErrorDetails = lazy(() => import('../components/modals/ErrorDetails'));
 
 const Body = () => {
   const { validateInputs, account, client, toAddress, valueInWei, data } = useTransaction();
@@ -21,16 +22,11 @@ const Body = () => {
     data,
   })
 
-
   const {
     data: transactionData,
     error: transactionError,
     sendTransaction,
-    config: transactionConfig,
   } = useSendTransaction(config);
-
-  console.log(`Transaction details: `);
-  console.dir(transactionConfig, { depth: 2 });
 
   const [validationPassed, setValidationPassed] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
@@ -52,15 +48,7 @@ const Body = () => {
     setValidationPassed(validationResult);
   };
 
-  const isAccountConnected = () => {
-    if (account.status === 'connected') {
-      setConnectionStatus(true);
-    }
-    setConnectionStatus(false);
-  }
-  const handleSendToNetwork = () => {
-    console.log('Sending to network...');
-  };
+  const isAccountConnected = account.status === 'connected';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen w-full px-4 py-12">
@@ -74,14 +62,15 @@ const Body = () => {
           </p>
         </div>
 
-
         <div className="space-y-4">
           <div className="bg-black bg-opacity-25 p-4 rounded-lg shadow-md">
             <CustomNetworkAlert chainId={client.chain.id} address={account.address} />
           </div>
 
           <div className="bg-black bg-opacity-25 p-4 rounded-lg shadow-md">
-            <TransactionDetailsInput />
+            <Suspense fallback={<div>Loading transaction details...</div>}>
+              <TransactionDetailsInput />
+            </Suspense>
             <div className="mt-4">
               <ValidateButton shouldBeActive={isAccountConnected} onClick={handleValidate} />
             </div>
@@ -89,7 +78,9 @@ const Body = () => {
 
           {validationPassed ? (
             <div className="bg-black bg-opacity-25 p-4 rounded-lg shadow-md">
-              <GasDetailsOutput />
+              <Suspense fallback={<div>Loading gas details...</div>}>
+                <GasDetailsOutput />
+              </Suspense>
               <div className="mt-4">
                 <SendToNetworkButton isValid={gasEstimationStatus === 'succeeded'} onClick={sendTransaction} />
               </div>
@@ -102,7 +93,9 @@ const Body = () => {
             </div>
           ) : errorDetails && (
             <div className="bg-black bg-opacity-25 p-4 rounded-lg shadow-md">
-              <ErrorDetails errorCode={errorDetails.errorCode} errorMessage={errorDetails.errorMessage} />
+              <Suspense fallback={<div>Loading error details...</div>}>
+                <ErrorDetails errorCode={errorDetails.errorCode} errorMessage={errorDetails.errorMessage} />
+              </Suspense>
             </div>
           )}
         </div>

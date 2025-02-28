@@ -1,12 +1,12 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20.10 AS builder
 WORKDIR /app
 
 # Copy package.json and package-lock.json (if available)
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies)
+RUN npm ci
 
 # Copy source files
 COPY . .
@@ -15,12 +15,14 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:20.10
 WORKDIR /app
 
-# Copy built assets from the builder stage
+# Copy built assets and necessary files from the builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/vite.config.js ./
+
 # Install only production dependencies
 RUN npm ci --only=production
 
@@ -28,4 +30,4 @@ RUN npm ci --only=production
 EXPOSE 4173
 
 # Run the app
-CMD ["npm", "run", "preview"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
