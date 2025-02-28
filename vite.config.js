@@ -1,23 +1,24 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// https://vitejs.dev/config/
 export default defineConfig({
     plugins: [react()],
     envPrefix: 'TOOLS_',
+    base: './',
     build: {
         outDir: 'dist',
-        sourcemap: false, // Change this to false for production
-        minify: true, // Enable minification for production
+        sourcemap: true, // Enable source maps for better debugging
         rollupOptions: {
             output: {
-                manualChunks: undefined // Ensure proper code splitting
+                // Simple chunking strategy to avoid potential issues
+                manualChunks: (id) => {
+                    if (id.includes('node_modules')) {
+                        return 'vendor';
+                    }
+                }
             }
         }
     },
-    server: {
-        host: true, // Needed for proper network access
-        strictPort: true,
-        port: 4173 // Match this with your Docker EXPOSE port
-    },
-    logLevel: 'info', // Set to 'info' for more verbose logging
+
 })
