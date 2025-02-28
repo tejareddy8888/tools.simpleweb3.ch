@@ -9,16 +9,7 @@ export default defineConfig({
     build: {
         outDir: 'dist',
         sourcemap: true, // Enable source maps for better debugging
-        rollupOptions: {
-            output: {
-                // Simple chunking strategy to avoid potential issues
-                manualChunks: (id) => {
-                    if (id.includes('node_modules')) {
-                        return 'vendor';
-                    }
-                }
-            }
-        }
+        minify: false, // Disable minification for easier debugging
     },
 
 })
