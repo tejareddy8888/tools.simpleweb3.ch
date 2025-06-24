@@ -7,6 +7,7 @@ import {
   polygon,
   sepolia,
 } from 'wagmi/chains';
+import { http } from 'wagmi'
 
 export const config = getDefaultConfig({
   appName: 'tools.simpleweb3.ch',
@@ -19,4 +20,8 @@ export const config = getDefaultConfig({
     base,
     sepolia
   ],
+  transports: {
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+  },
 });
