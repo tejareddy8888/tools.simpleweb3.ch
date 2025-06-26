@@ -1,7 +1,8 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { parseEther } from 'viem';
-import { useSendTransaction, usePrepareTransactionRequest } from 'wagmi'
+import { useSendTransaction, usePrepareTransactionRequest } from 'wagmi';
+import { isAddress, parseEther } from 'viem';
+
 import ValidateButton from '../components/buttons/ValidateButton';
 import SendToNetworkButton from '../components/buttons/SendToNetworkButton';
 import { useTransaction } from '../context/TransactionContextCore';
@@ -13,20 +14,7 @@ const GasDetailsOutput = lazy(() => import('../components/modals/GasDetails'));
 const ErrorDetails = lazy(() => import('../components/modals/ErrorDetails'));
 
 const Body = () => {
-  const { validateInputs, account, client, toAddress, valueInWei, data } = useTransaction();
-
-  // Prepare the transaction
-  const { config } = usePrepareTransactionRequest({
-    to: toAddress,
-    value: valueInWei ? parseEther(valueInWei) : undefined,
-    data,
-  })
-
-  const {
-    data: transactionData,
-    error: transactionError,
-    sendTransaction,
-  } = useSendTransaction(config);
+  const { validateInputs, account, client, toAddress, valueInWei, data, } = useTransaction();
 
   const [validationPassed, setValidationPassed] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
@@ -47,6 +35,26 @@ const Body = () => {
     setErrorDetails(null);
     setValidationPassed(validationResult);
   };
+
+  const { data: txRequestData } = usePrepareTransactionRequest({
+    to: toAddress,
+    value: valueInWei ? parseEther(valueInWei) : undefined,
+    data,
+  });
+
+  const { sendTransactionAsync } = useSendTransaction();
+
+  const handleSendTransaction = async () => {
+    try {
+      await sendTransactionAsync(txRequestData);
+    } catch (error) {
+      console.error("Failed to send transaction:", error);
+    }
+  };
+
+  useEffect(() => {
+
+  }, [toAddress,txRequestData]);
 
   const isAccountConnected = account.status === 'connected';
 
@@ -82,13 +90,13 @@ const Body = () => {
                 <GasDetailsOutput />
               </Suspense>
               <div className="mt-4">
-                <SendToNetworkButton isValid={gasEstimationStatus === 'succeeded'} onClick={sendTransaction} />
+                <SendToNetworkButton isValid={gasEstimationStatus === 'succeeded'} onClick={handleSendTransaction} />
               </div>
               <div>
-                {transactionData && (
+                {/* {transactionData && (
                   <div>Transaction: {JSON.stringify(transactionData)}</div>
                 )}
-                {transactionError && <div>Error sending transaction</div>}
+                {transactionError && <div>Error sending transaction</div>} */}
               </div>
             </div>
           ) : errorDetails && (
