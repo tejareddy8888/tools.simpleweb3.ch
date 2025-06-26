@@ -7,7 +7,7 @@ import { chainIdToChainIcon } from '../../web3/networks/mapChainIdtoIcon';
 const CustomAlert = styled(Alert)(({ theme }) => ({
     backgroundColor: 'transparent', // Make background transparent
     color: theme.palette.warning.main, // Use the warning color for text
-    border: `2px solid ${theme.palette.warning.main}`, // Add a border with the warning color
+    border: `0px solid ${theme.palette.warning.main}`, // Add a border with the warning color
     '& .MuiAlert-icon': {
         alignItems: 'center',
         color: theme.palette.warning.main, // Set icon color to match text

@@ -27,7 +27,12 @@ const GasDetailsOutput = () => {
   const network = emitNetwork(account);
 
   if (status === 'loading') {
-    return <CircularProgress />
+    return (
+      <div className="flex items-center gap-2 animate-fade-in delay-1000">
+        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+        <span className="text-blue-600 font-medium animate-pulse">Recalculating Gas Estimate...</span>
+      </div>
+    );
   }
 
   if (status === 'failed') {
