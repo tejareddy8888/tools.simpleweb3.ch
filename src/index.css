@@ -1,3 +1,27 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+html, body {
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@keyframes pixelFlicker {
+    0%, 100% { opacity: 1; }
+    40% { opacity: 0.5; }
+    60% { opacity: 0.7; }
+  }
+  
+  .flicker {
+    animation: pixelFlicker 1s infinite steps(2, start);
+  }
+  .flicker-delay-1 { animation-delay: 0.1s; }
+  .flicker-delay-2 { animation-delay: 0.2s; }
+  .flicker-delay-3 { animation-delay: 0.3s; }
+  .flicker-delay-4 { animation-delay: 0.4s; }
+  .flicker-delay-5 { animation-delay: 0.5s; }
+  .flicker-delay-6 { animation-delay: 0.6s; }

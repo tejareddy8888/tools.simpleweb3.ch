@@ -1,39 +1,65 @@
 import { styled } from '@mui/system';
-import { Alert, ThemeProvider, AlertTitle } from '@mui/material';
+import { AlertTitle } from '@mui/material';
 import React from 'react';
-import { customAlertTheme } from '../../styles/customAlertTheme';
-import { chainIdToChainIcon } from '../../web3/networks/mapChainIdtoIcon';
-
-const CustomAlert = styled(Alert)(({ theme }) => ({
-    backgroundColor: 'transparent', // Make background transparent
-    color: theme.palette.warning.main, // Use the warning color for text
-    border: `0px solid ${theme.palette.warning.main}`, // Add a border with the warning color
-    '& .MuiAlert-icon': {
-        alignItems: 'center',
-        color: theme.palette.warning.main, // Set icon color to match text
-    },
-    '& .MuiAlert-message': {
-        width: '100%', // Ensure the message takes full width
-    },
-}));
 
 const AddressSpan = styled('span')({
-    wordBreak: 'break-all', // This will break the address at any character
+    wordBreak: 'break-all',
     display: 'inline-block',
     width: '100%',
 });
 
 export const CustomNetworkAlert = ({ chainId, address }) => {
     return (
-        <ThemeProvider theme={customAlertTheme}>
-            <CustomAlert
-                icon={<img src={chainIdToChainIcon.get(chainId)} style={{ width: 45, height: 45 }} alt="Chain Icon" />}
-                severity="warning" // This ensures we're using the warning palette
+        <div className="relative">
+            {/* Pixel Flicker Corners */}
+            <div className="absolute top-0 left-0 w-4 h-4 bg-black flicker flicker-delay-2" />
+            <div className="absolute top-0 right-0 w-4 h-4 bg-black flicker flicker-delay-2" />
+            <div className="absolute bottom-0 left-0 w-4 h-4 bg-black flicker flicker-delay-2" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 bg-black flicker flicker-delay-2" />
+
+            <div
+                className="bg-white p-4 border-[4px] border-black"
+                style={{
+                    imageRendering: 'pixelated',
+                    fontFamily: '"Press Start 2P", monospace',
+                    boxShadow: '8px 8px 0 #000',
+                }}
             >
-                <AlertTitle>Address In Use:</AlertTitle>
-                <AddressSpan>{address}</AddressSpan>
-            </CustomAlert>
-        </ThemeProvider>
+                <AlertTitle className="text-black text-xs">Address In Use:</AlertTitle>
+                <AddressSpan className="text-xs">{address}</AddressSpan>
+
+                <div className="mt-4">
+                    <h3 className="mb-4 text-xs font-bold text-black uppercase">Transaction Type</h3>
+                    <ul className="w-full text-xs font-bold bg-white border-[3px] border-black sm:flex">
+                        {[
+                            { id: 'license', label: 'Legacy (Type 0)' },
+                            { id: 'id', label: 'EIP-1559 (Type 2)' },
+                            { id: 'military', label: 'EIP-2930 (Type 1)' },
+                        ].map((item) => (
+                            <li
+                                key={item.id}
+                                className="w-full border-b-[3px] border-black sm:border-b-0 sm:border-r-[3px] last:border-r-0"
+                            >
+                                <div className="flex items-center px-2 py-2 bg-gray-100 hover:bg-yellow-100 transition">
+                                    <input
+                                        id={`horizontal-list-radio-${item.id}`}
+                                        type="radio"
+                                        name="list-radio"
+                                        className="w-4 h-4 border-[2px] border-black bg-white"
+                                    />
+                                    <label
+                                        htmlFor={`horizontal-list-radio-${item.id}`}
+                                        className="ml-3 text-black"
+                                    >
+                                        {item.label}
+                                    </label>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        </div>
     );
 };
 

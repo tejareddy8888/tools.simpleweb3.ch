@@ -23,10 +23,10 @@ const Header = () => {
           {/* NavLinks */}
           <div className='hidden md:flex flex-grow justify-center'>
             <div className='space-x-4'>
-              <NavLink to='/' className={linkClass}>
+              <NavLink to='/' >
                 Home
               </NavLink>
-              <NavLink to='/about' className={linkClass}>
+              <NavLink to='/about' >
                 About
               </NavLink>
             </div>

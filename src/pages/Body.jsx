@@ -59,20 +59,11 @@ const Body = () => {
   const isAccountConnected = account.status === 'connected';
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen w-full px-4 py-12">
-        <h1 className="text-white text-4xl sm:text-6xl font-bold text-center leading-tight max-w-md mx-auto">
-  Simplest EVM Transaction Submission
-</h1>
-      <div className="w-full max-w-lg">
-    
-        <div className='my-6'>
-          
+    <div className=" min-h-screen w-full px-4 py-12">
        
-
-          <p className="text-white text-xs text-center">
-            Developer Friendly Ethereum transaction submission through UI.
-          </p>
-        </div>
+      <div className="w-full max-w-full">
+    
+       
 
         <div className="space-y-4">
           <div className="bg-black bg-opacity-25 p-4 rounded-lg shadow-md">

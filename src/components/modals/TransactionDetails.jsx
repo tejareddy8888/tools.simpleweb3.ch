@@ -1,60 +1,101 @@
-import React, { useState, useEffect } from 'react';
-import { useTransaction } from '../../context/TransactionContextCore';
+import React from "react";
+import { useTransaction } from "../../context/TransactionContextCore";
+
+// ✅ PixelInput moved OUTSIDE to prevent re-creation on every render
+const PixelInput = ({
+  label,
+  id,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  bg = "#fefcd0",
+  textColor = "black",
+  borderColor = "black",
+}) => {
+  return (
+    <div
+      className="relative w-full p-2 mb-4"
+      style={{
+        imageRendering: "pixelated",
+        fontFamily: '"Press Start 2P", monospace',
+        backgroundColor: bg,
+        border: `3px solid ${borderColor}`,
+        color: textColor,
+      }}
+    >
+      {/* Flickering pixel corners */}
+      <div className="absolute top-0 left-0 w-2 h-2 bg-black flicker" />
+      <div className="absolute top-0 right-0 w-2 h-2 bg-black flicker" />
+      <div className="absolute bottom-0 left-0 w-2 h-2 bg-black flicker" />
+      <div className="absolute bottom-0 right-0 w-2 h-2 bg-black flicker" />
+
+      <label htmlFor={id} className="block text-[10px] mb-1" style={{ color: textColor }}>
+        {label}
+      </label>
+
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full px-2 py-2 text-xs outline-none"
+        style={{
+          backgroundColor: bg,
+          color: textColor,
+          fontFamily: '"Press Start 2P", monospace',
+          imageRendering: "pixelated",
+          border: `2px solid ${borderColor}`,
+        }}
+      />
+    </div>
+  );
+};
 
 const TransactionDetailsInput = () => {
-  const { toAddress, setToAddress, data, setData, valueInWei, setEthValue, validateInputs } = useTransaction();
+  const {
+    toAddress,
+    setToAddress,
+    data,
+    setData,
+    valueInWei,
+    setEthValue,
+    validateInputs,
+  } = useTransaction();
 
-  // useEffect(() => {
-  //   // Validation logic
-  //   validateInputs();
-  // }, [toAddress, data, valueInWei]);
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   if (isValid) {
-  //     console.log('Form submitted:', { toAddress, data, valueInWei });
-  //     // Add your submission logic here
-  //   }
-  // };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    validateInputs();
+  };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-xl">
-      <form onSubmit={validateInputs} className="space-y-4">
-        <div>
-          <label htmlFor="toAddress" className="block text-sm font-medium text-gray-700">To:</label>
-          <input
-            type="text"
-            id="toAddress"
-            value={toAddress}
-            placeholder='0x4838B106FCe9647Bdf1E7877BF73cE8B0BAD5f97'
-            onChange={(e) => setToAddress(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label htmlFor="data" className="block text-sm font-medium text-gray-700">Data:</label>
-          <input
-            type="text"
-            id="data"
-            value={data}
-            placeholder='0x Prefixed Hexadecimal String or just HexString'
-            onChange={(e) => setData(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label htmlFor="valueInWei" className="block text-sm font-medium text-gray-700">Value: </label>
-          <input
-            type="number"
-            id="valueInWei"
-            value={valueInWei}
-            placeholder='value in Wei units'
-            onChange={(e) => setEthValue(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <PixelInput
+        label="To:"
+        id="toAddress"
+        value={toAddress}
+        onChange={(e) => setToAddress(e.target.value)}
+        placeholder="0x4838B1..."
+      />
+      <PixelInput
+        label="Data:"
+        id="data"
+        value={data}
+        onChange={(e) => setData(e.target.value)}
+        placeholder="0x prefixed hex string"
+      />
+      <PixelInput
+        label="Value:"
+        id="valueInWei"
+        type="number"
+        value={valueInWei}
+        onChange={(e) => setEthValue(e.target.value)}
+        placeholder="Value in Wei"
+      />
+
+      
+    </form>
   );
 };
 
