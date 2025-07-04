@@ -1,127 +1,111 @@
-// import React, { useEffect } from "react";
-// import { Button } from "../../Buttons/button";
-// import { Card, CardContent } from "../../components/ui/card";
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { NavLink, Link } from "react-router-dom";
+ // ✅ Add CSS animations separately
 
-// export const LandingPage = (): JSX.Element => {
-//   useEffect(() => {
-//     document.body.style.cursor = 'url("/cursor.svg") 0 0, auto';
-//     return () => {
-//       document.body.style.cursor = 'auto';
-//     };
-//   }, []);
+const LandingPage = () => {
+  useEffect(() => {
+    document.body.style.cursor = 'url("/cursor.svg") 0 0, auto';
+    return () => {
+      document.body.style.cursor = 'auto';
+    };
+  }, []);
 
-//   const steps = [
-//     {
-//       number: "Step 1",
-//       action: "Validate",
-//       description: "Validate your wallet and transaction details",
-//     },
-//     {
-//       number: "Step 2",
-//       action: "Send Transaction",
-//       description:
-//         "After validation check the gas value and send the transaction",
-//     },
-//     {
-//       number: "Step 3",
-//       action: "Transaction successful",
-//       description: "Transaction successfully added",
-//     },
-//   ];
+  return (
+    <div className="bg-black flex justify-center w-full min-h-screen px-4">
+      <div className="bg-black max-w-[1280px] w-full">
+        <div className="relative w-full bg-[url(/frame-1.svg)] bg-cover" style={{ imageRendering: "pixelated" }}>
 
-//   return (
-//     <div className="bg-black flex flex-row justify-center w-full">
-//       <div className="bg-black w-[1280px] h-[1207px]">
-//         <div className="relative w-[1278px] h-[1207px] bg-[url(/frame-1.svg)] bg-[100%_100%]">
-//           {/* Header */}
-//           <header className="w-full">
-//             <nav className="flex justify-between">
-//               <h1 className="absolute top-3.5 left-[37px] [font-family:'Jersey_10',Helvetica] font-normal text-[#fffcfc] text-4xl tracking-[0] leading-[normal] whitespace-nowrap">
-//                 SimpleWeb3
-//               </h1>
-//               <button className="absolute top-3.5 left-[1146px] [font-family:'Jersey_10',Helvetica] font-normal text-[#fffcfc] text-4xl tracking-[0] leading-[normal] whitespace-nowrap">
-//                 +Menu
-//               </button>
-//             </nav>
-//           </header>
+          {/* Header */}
+          <header className="w-full p-4 flex justify-between items-center">
+            <NavLink className="flex items-center space-x-2" to="/">
+             <span> <img className="h-11 w-auto" src="/logo/mdi_cube-outline.svg" alt="SimpleWeb3" /></span>
+             <span><p className="absolute  [font-family:Jersey_10,Helvetica] font-normal text-[#fffcfc] text-xl tracking-[0] leading-[normal] whitespace-nowrap">
+                SimpleWeb3
+              </p></span> 
+            </NavLink>
+            <button className="font-[Jersey_10] text-[#fffcfc] text-xl flicker">+Menu</button>
+          </header>
 
-//           {/* Hero Section */}
-//           <section>
-//             <h2 className="absolute top-[210px] left-[37px] [font-family:'Jersey_10',Helvetica] font-normal text-[#fffcfc] text-8xl tracking-[0] leading-[normal]">
-//               Simplest EVM Transaction <br />
-//               Submission
-//             </h2>
+          {/* Hero */}
+          <section className="px-4 mt-20 md:mt-36 text-left">
+          <h2 className="font-[jersey_10] text-[#fffcfc] text-2xl md:text-4xl lg:text-5xl leading-snug tracking-tight mb-6">
+  <span className="block mb-10">Simplest EVM Transaction</span>
+  <span>Submission</span>
+</h2>
+<p className="font-['Press_Start_2P'] text-[#fffcfc] text-xs md:text-base max-w-xl mb-14">
+ <span className="block mb-2">Developer Friendly Ethereum</span>
+  <span>transaction submission through UI.</span> 
+</p>
 
-//             <p className="absolute top-[434px] left-[37px] [font-family:'Jersey_10',Helvetica] font-normal text-[#fffcfc] text-4xl tracking-[0] leading-[normal] whitespace-nowrap">
-//               Developer Friendly Ethereum transaction submission through UI.
-//             </p>
+            <div className="mt-8 relative w-fit">
+              <div className="absolute inset-0 bg-[#955ff9] translate-y-2" />
+              <Link to="/transaction">
+                <button className="relative z-10 px-6 py-3 bg-[#d1ff03] hover:bg-[#c1ef00] font-['Press_Start_2P'] text-black text-xs md:text-sm pixel-pulse border-2 border-black shadow-[4px_4px_0_#000]">
+                  Send Transaction
+                </button>
+              </Link>
+            </div>
+          </section>
 
-//             {/* CTA Button with shadow effect */}
-//             <div className="absolute w-80 h-[62px] top-[504px] left-[37px]">
-//               <div className="absolute w-[315px] h-[53px] top-[9px] left-0 bg-[#955ff9]" />
-//               < Link to="/">
-//               <Button className="absolute w-[315px] h-[53px] top-0 left-[5px] bg-[#d1ff03] hover:bg-[#c1ef00] [font-family:'Jersey_10',Helvetica] font-normal text-black text-4xl rounded-none">
-//                 Send Transaction
-//               </Button>
-//               </ Link>
-//             </div>
-//           </section>
+          {/* How It Works */}
+          <section className="px-4 mt-24">
+            <h3 className="font-['Press_Start_2P'] text-[#fffcfc] text-lg md:text-2xl mb-6">
+              How It Works
+            </h3>
 
-//           {/* How It Works Section */}
-//           <section>
-//             <h3 className="absolute top-[640px] left-[37px] [font-family:'Jersey_10',Helvetica] font-normal text-[#fffcfc] text-4xl tracking-[0] leading-[normal] whitespace-nowrap">
-//               How It Works
-//             </h3>
+            <div className="flex flex-col md:flex-row gap-6">
+              {[1, 2, 3].map((step) => (
+                <div
+                  key={step}
+                  className="relative w-full md:w-[365px] bg-white border-[4px] border-black shadow-[4px_4px_0_#000] p-4 pixel-frame"
+                  style={{ imageRendering: "pixelated" }}
+                >
+                  {/* Pixel corners */}
+                  <div className="absolute top-0 left-0 w-2 h-2 bg-black flicker flicker-delay-1" />
+    <div className="absolute top-0 right-0 w-2 h-2 bg-black flicker flicker-delay-2" />
+    <div className="absolute bottom-0 left-0 w-2 h-2 bg-black flicker flicker-delay-3" />
+    <div className="absolute bottom-0 right-0 w-2 h-2 bg-black flicker flicker-delay-4" />
 
-//             <div className="absolute top-[697px] left-[37px] flex gap-[60px]">
-//               {steps.map((step, index) => (
-//                 <div key={`step-${index}`} className="relative w-[365px]">
-//                   <h4 className="[font-family:'Jersey_10',Helvetica] font-normal text-[#fffcfc] text-3xl tracking-[0] leading-[normal] whitespace-nowrap mb-2">
-//                     {step.number}
-//                   </h4>
+                  <h4 className="font-['Jersey_10'] text-black text-xl mb-2">Step {step}</h4>
 
-//                   <Card
-//   className="w-full h-[250px] bg-white rounded-none relative overflow-hidden"
-//   style={{ imageRendering: "pixelated" }}
-// >
-//   {/* Pixelated jagged border with flicker animation */}
-//   <div className="absolute top-0 left-0 w-2 h-2 bg-black flicker flicker-delay-1" />
-//   <div className="absolute top-0 left-[4px] w-[calc(100%-4px)] h-[2px] bg-black flicker flicker-delay-2" />
-//   <div className="absolute top-[4px] left-0 w-[2px] h-[calc(100%-4px)] bg-black flicker flicker-delay-3" />
+                  {step === 1 && (
+                    <>
+                      <p className="text-black text-sm mb-4 font-mono">
+                        Validate your wallet and transaction details
+                      </p>
+                      <button className="w-full bg-[#d1ff03] hover:bg-[#c1ef00] font-[Jersey_10] text-black text-sm rounded-none border-2 border-black shadow-[2px_2px_0_#000] p-4">
+                        Validate
+                      </button>
+                    </>
+                  )}
+                  {step === 2 && (
+                    <>
+                      <p className="text-black text-xs font-mono mb-4">
+                        Check gas and send the transaction
+                      </p>
+                      <button className="w-full bg-[#d1ff03] hover:bg-[#c1ef00] font-[Jersey_10] text-black text-sm rounded-none border-2 border-black shadow-[2px_2px_0_#000] p-4">
+                        Send Transaction
+                      </button>
+                    </>
+                  )}
+                  {step === 3 && (
+                    <>
+                      <p className="text-black text-xs font-mono mb-4">
+                        Transaction successfully added
+                      </p>
+                      <button className="w-full bg-[#d1ff03] hover:bg-[#c1ef00] font-[Jersey_10] text-black text-sm rounded-none border-2 border-black shadow-[2px_2px_0_#000] p-4">
+                        Success
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-//   <div className="absolute top-0 right-0 w-2 h-2 bg-black flicker flicker-delay-2" />
-//   <div className="absolute top-0 right-[4px] w-[calc(100%-4px)] h-[2px] bg-black flicker flicker-delay-4" />
-//   <div className="absolute top-[4px] right-0 w-[2px] h-[calc(100%-4px)] bg-black flicker flicker-delay-5" />
-
-//   <div className="absolute bottom-0 left-0 w-2 h-2 bg-black flicker flicker-delay-4" />
-//   <div className="absolute bottom-0 left-[4px] w-[calc(100%-4px)] h-[2px] bg-black flicker flicker-delay-3" />
-//   <div className="absolute bottom-[4px] left-0 w-[2px] h-[calc(100%-4px)] bg-black flicker flicker-delay-1" />
-
-//   <div className="absolute bottom-0 right-0 w-2 h-2 bg-black flicker flicker-delay-6" />
-//   <div className="absolute bottom-0 right-[4px] w-[calc(100%-4px)] h-[2px] bg-black flicker flicker-delay-5" />
-//   <div className="absolute bottom-[4px] right-0 w-[2px] h-[calc(100%-4px)] bg-black flicker flicker-delay-2" />
-
-//   {/* Content */}
-//   <CardContent className="p-0 h-full relative z-10">
-//     <div className="absolute w-[315px] h-[53px] top-[103px] left-[25px] bg-[#955ff9]" />
-//     <Button className="absolute w-[315px] h-[53px] top-[94px] left-[28px] bg-[#d1ff03] hover:bg-[#c1ef00] [font-family:'Jersey_10',Helvetica] font-normal text-black text-4xl rounded-none">
-//       {step.action}
-//     </Button>
-//   </CardContent>
-// </Card>
-
-
-
-
-//                 </div>
-//               ))}
-//             </div>
-//           </section>
-//         </div>
-//       </div>
-//     </div>
-    
-//   );
-// };
+export default LandingPage;

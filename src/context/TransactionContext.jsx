@@ -20,6 +20,20 @@ export const TransactionProvider = ({ children }) => {
         return allValid;
     };
 
+    
+
+useEffect(() => {
+  console.log("🧩 Debug Values:");
+  console.log("toAddress:", toAddress);
+  console.log("data:", data);
+  console.log("valueInWei:", valueInWei);
+  console.log("isTxInputValid:", isTxInputValid);
+  console.log("chainId:", chainId);
+  console.log("account:", account);
+  console.log("client:", client);
+  
+}, [toAddress, data, valueInWei, isTxInputValid, chainId, account, client]);
+
     return (
         <TransactionContext.Provider value={{
             toAddress, setToAddress,
