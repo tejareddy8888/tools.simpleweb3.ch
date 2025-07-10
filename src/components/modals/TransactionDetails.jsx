@@ -1,7 +1,7 @@
 import React from "react";
 import { useTransaction } from "../../context/TransactionContextCore";
 
-// ✅ PixelInput moved OUTSIDE to prevent re-creation on every render
+
 const PixelInput = ({
   label,
   id,

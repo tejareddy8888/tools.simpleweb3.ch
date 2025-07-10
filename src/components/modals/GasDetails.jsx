@@ -1,162 +1,204 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useTransaction } from '../../context/TransactionContextCore';
 import { estimateGas } from '../../reducer/gasEstimation';
+import { useTransaction } from '../../context/TransactionContextCore';
+
+const MAX_GAS = 100000;
+const MIN_GAS = 21000;
+const MAX_PRIORITY = 50;
+const MIN_PRIORITY = 1;
 
 const GasDetailsOutput = ({ txType }) => {
   const dispatch = useDispatch();
   const {
-    toAddress,
-    data,
-    valueInWei,
-    account,
-    client,
-    isTxInputValid,
+    toAddress, data, valueInWei,
+    account, client, isTxInputValid,
+    userGasLimit, setUserGasLimit,
   } = useTransaction();
-  const { estimatedGas, status, error } = useSelector(
-    (state) => state.gasEstimation
-  );
 
-  const [gas, setGas] = useState(estimatedGas);
+  const { estimatedGas, status, error } = useSelector((state) => state.gasEstimation);
+
+  const [gas, setGas] = useState(MIN_GAS);
   const [feeData, setFeeData] = useState({
-    baseFeePerGas: '', // from client
-    maxPriorityFeePerGas: '2', // slider controlled
-    maxFeePerGas: '', // calculated
+    baseFeePerGas: '30',
+    maxPriorityFeePerGas: '2',
+    maxFeePerGas: '',
   });
 
-  // Estimate gas when valid input changes
+  const [loadingBarStep, setLoadingBarStep] = useState(0);
+  const recalcTimer = useRef(null);
+
+  const loadingFrames = [
+    '░░░░░░░░', '▓░░░░░░░', '▓▓░░░░░░', '▓▓▓░░░░░',
+    '▓▓▓▓░░░░', '▓▓▓▓▓░░░', '▓▓▓▓▓▓░░', '▓▓▓▓▓▓▓░', '▓▓▓▓▓▓▓▓'
+  ];
+
   useEffect(() => {
-    if (isTxInputValid && client) {
+    if (!isTxInputValid || !client || !account?.address || !toAddress) return;
+
+    const anim = setInterval(() => {
+      setLoadingBarStep((prev) => (prev + 1) % loadingFrames.length);
+    }, 100);
+
+    if (recalcTimer.current) clearTimeout(recalcTimer.current);
+    recalcTimer.current = setTimeout(() => {
+      const safeValue = valueInWei || 0;
+      const valueHex = typeof safeValue === 'string' && safeValue.startsWith('0x')
+        ? safeValue
+        : `0x${parseInt(safeValue).toString(16)}`;
+
       dispatch(
         estimateGas({
           client,
           from: account.address,
           to: toAddress,
-          data,
-          value: valueInWei,
+          data: data || '0x',
+          value: valueHex,
         })
       );
-    }
-  }, [dispatch, isTxInputValid, client, account.address, toAddress, data, valueInWei]);
 
-  // Set estimated gas (base gas)
+      setTimeout(() => clearInterval(anim), 800);
+    }, 400);
+  }, [toAddress, data, valueInWei, client, account.address, isTxInputValid, dispatch]);
+
   useEffect(() => {
-    if (estimatedGas) {
+    if (typeof estimatedGas === 'number' && estimatedGas > 0) {
       setGas(estimatedGas);
+      setUserGasLimit(estimatedGas);
+    } else {
+      setGas(MIN_GAS);
+      setUserGasLimit(MIN_GAS);
     }
   }, [estimatedGas]);
 
-  // Fetch base fee from network
-  useEffect(() => {
-    const fetchGasFees = async () => {
-      if (!client || !isTxInputValid || txType !== 'id') return;
-
-      try {
-        const fees = await client.estimateFeesPerGas();
-        setFeeData((prev) => ({
-          ...prev,
-          baseFeePerGas: fees.baseFeePerGas?.toString() || '',
-        }));
-      } catch (err) {
-        console.error("❌ Error fetching fee data:", err);
-      }
-    };
-
-    fetchGasFees();
-  }, [client, isTxInputValid, txType]);
-
-  const network = emitNetwork(account);
-
-  // Calculate max fee = gas (slider) + maxPriorityFee
   const calculatedMaxFee =
-    parseFloat(gas || '0') + parseFloat(feeData.maxPriorityFeePerGas || '0');
+    parseFloat(gas || MIN_GAS) + parseFloat(feeData.maxPriorityFeePerGas || '0');
+
+  const useHoldButton = (callback) => {
+    const intervalRef = useRef(null);
+    const start = () => {
+      callback();
+      intervalRef.current = setInterval(callback, 80);
+    };
+    const stop = () => clearInterval(intervalRef.current);
+    return {
+      onMouseDown: start,
+      onMouseUp: stop,
+      onMouseLeave: stop,
+      onTouchStart: start,
+      onTouchEnd: stop,
+    };
+  };
+
+  const gasInc = useHoldButton(() => {
+    setGas((prev) => {
+      const newGas = Math.min(MAX_GAS, Math.max(MIN_GAS, prev + 1000));
+      setUserGasLimit(newGas);
+      return newGas;
+    });
+  });
+
+  const gasDec = useHoldButton(() => {
+    setGas((prev) => {
+      const newGas = Math.max(MIN_GAS, prev - 1000);
+      setUserGasLimit(newGas);
+      return newGas;
+    });
+  });
+
+  const incPriority = useHoldButton(() =>
+    setFeeData((prev) => ({
+      ...prev,
+      maxPriorityFeePerGas: Math.min(MAX_PRIORITY, parseInt(prev.maxPriorityFeePerGas || '1') + 1).toString(),
+    }))
+  );
+
+  const decPriority = useHoldButton(() =>
+    setFeeData((prev) => ({
+      ...prev,
+      maxPriorityFeePerGas: Math.max(MIN_PRIORITY, parseInt(prev.maxPriorityFeePerGas || '1') - 1).toString(),
+    }))
+  );
+
+  const network = account?.status === 'connected' ? account.chain.name : 'Unknown';
+
+  if (status === 'failed') {
+    return (
+      <div className="p-4 bg-white border-2 border-red-600 text-red-500 font-mono">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="p-4 bg-black border-2 border-yellow-400 font-mono text-lime-300 text-xs w-full max-w-md mx-auto">
+        <pre> Recalculating Gas Module [{loadingFrames[loadingBarStep]}]</pre>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="relative px-4 py-3 bg-white text-black border-2 border-black mb-6 w-full max-w-md mx-auto my-auto"
-      style={{ imageRendering: 'pixelated' }}
-    >
-      {/* Pixel flicker corners */}
-      <div className="absolute top-0 left-0 w-2 h-2 bg-black flicker" />
-      <div className="absolute top-0 right-0 w-2 h-2 bg-black flicker" />
-      <div className="absolute bottom-0 left-0 w-2 h-2 bg-black flicker" />
-      <div className="absolute bottom-0 right-0 w-2 h-2 bg-black flicker" />
+    <div className="relative px-4 py-5 bg-white text-black border-4 border-black mb-6 w-full max-w-md mx-auto my-auto font-mono" style={{ imageRendering: 'pixelated' }}>
+      <h2 className="text-lg font-['Press_Start_2P'] mb-4">Network Details</h2>
 
-      <h2 className="text-lg font-semibold mb-4">Network Details</h2>
+      <div className="text-sm mb-4">
+        <div className="mb-2">
+          <span className="font-bold">→ Gas:</span>{' '}
+          <span className="text-[#6200ea]">
+            0x{parseInt(gas || MIN_GAS).toString(16).toUpperCase()}
+          </span>{' '}
+          <span className="ml-1 text-gray-700">({gas || MIN_GAS} units)</span>
+        </div>
 
-      {/* 🔹 Gas */}
-      <div className="text-md mb-3">
-        <span className="font-bold">
-          {txType === 'id' ? '→ Base Gas :' : '→ Gas :'}
-        </span>{' '}
-        0x{parseInt(gas || 0).toString(16).toUpperCase()} ({gas} units)
+        <div className="flex items-center space-x-2">
+          <button {...gasDec} className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs">-</button>
+          <div className="flex-grow h-4 bg-black relative overflow-hidden border-2 border-black shadow-inner">
+            <div
+              className="h-full bg-[#d1ff03] transition-all duration-300 ease-out"
+              style={{ width: `${((gas - MIN_GAS) / (MAX_GAS - MIN_GAS)) * 100}%` }}
+            />
+          </div>
+          <button {...gasInc} className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs">+</button>
+        </div>
       </div>
 
-      {/* 🔹 Always show main gas slider */}
-      <input
-        type="range"
-        min="21000"
-        max="100000"
-        value={gas}
-        onChange={(e) => setGas(parseInt(e.target.value))}
-        className="w-full h-2 appearance-none bg-black outline-none cursor-pointer mt-2"
-        style={{
-          backgroundImage: 'linear-gradient(to right, #d1ff03 0%, #d1ff03 100%)',
-          backgroundSize: `${((gas - 21000) / (100000 - 21000)) * 100}% 100%`,
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
-
-      {/* 🔹 Extra Fee Fields for Type 2 */}
       {txType === 'id' && (
-        <div className="mt-4 text-xs font-mono space-y-2">
+        <div className="mt-4 border-t border-black pt-4 text-sm space-y-4">
           <div>
-            <span className="font-bold">→ Base Fee:</span>{' '}
-            {feeData.baseFeePerGas || '...'} GWEI
-          </div>
-
-          <div className="flex flex-col mt-2">
-            <span className="font-bold">→ Max Priority Fee:</span>
-            <input
-              type="range"
-              min="1"
-              max="50"
-              value={feeData.maxPriorityFeePerGas}
-              onChange={(e) =>
-                setFeeData((prev) => ({
-                  ...prev,
-                  maxPriorityFeePerGas: e.target.value,
-                }))
-              }
-              className="w-full h-2 appearance-none bg-black outline-none cursor-pointer mt-1"
-              style={{
-                backgroundImage: 'linear-gradient(to right, #ff03e2 0%, #ff03e2 100%)',
-                backgroundSize: `${(parseInt(feeData.maxPriorityFeePerGas) / 50) * 100}% 100%`,
-                backgroundRepeat: 'no-repeat',
-              }}
-            />
-            <div className="mt-1 text-[10px]">
-              {feeData.maxPriorityFeePerGas} GWEI
+            <div className="font-bold mb-1">→ Max Priority Fee</div>
+            <div className="bg-black text-[#d1ff03] px-3 py-2 text-sm border-2 border-black inline-block font-mono tracking-widest">
+              {renderAsciiBar(parseInt(feeData.maxPriorityFeePerGas), MAX_PRIORITY)}
+            </div>
+            <div className="flex items-center space-x-3 mt-2">
+              <button {...decPriority} className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs">-</button>
+              <span className="text-xs text-gray-600">{feeData.maxPriorityFeePerGas} GWEI</span>
+              <button {...incPriority} className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs">+</button>
             </div>
           </div>
 
           <div>
-            <span className="font-bold">→ Max Fee:</span>{' '}
-            {calculatedMaxFee.toFixed(2)} GWEI
+            <div className="font-bold">→ Max Fee:</div>
+            <div>{calculatedMaxFee.toFixed(2)} GWEI</div>
           </div>
         </div>
       )}
 
-      {/* 🔹 Network */}
-      <div className="text-md mt-4">
-        <span className="font-bold">→ Network :</span> {network}
+      <div className="text-sm mt-4">
+        <span className="font-bold">→ Network :</span>{' '}
+        <span className="text-[#007bff]">{network}</span>
       </div>
     </div>
   );
 };
 
-function emitNetwork(account) {
-  return account?.status === 'connected' ? account.chain.name : 'Unknown';
+function renderAsciiBar(value, max, length = 10) {
+  const percentage = value / max;
+  const filled = Math.round(percentage * length);
+  const empty = length - filled;
+  const bar = '█'.repeat(filled) + ' '.repeat(empty);
+  const label = percentage < 0.33 ? 'SLOW' : percentage < 0.66 ? 'NORMAL' : 'FAST';
+  return `[${bar}] ${label}`;
 }
 
 export default GasDetailsOutput;

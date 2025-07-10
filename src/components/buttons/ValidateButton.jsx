@@ -6,8 +6,9 @@ const ValidateButton = ({ shouldBeActive, onClick }) => {
             <button
                 type="button"
                 onClick={onClick}
-                className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${shouldBeActive
-                    ? 'bg-customTangerine bg-opacity-80 hover:bg-opacity-100 '
+                
+                className={`w-full py-2 px-4 border border-transparent  shadow-sm text-sm font-medium text-black ${shouldBeActive
+                    ? 'bg-[#d1ff03]  '
                     : 'bg-gray-300 cursor-not-allowed'
                     }`}
                 disabled={!shouldBeActive}
