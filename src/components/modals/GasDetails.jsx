@@ -34,93 +34,24 @@ const GasDetailsOutput = ({ txType }) => {
   ];
 
   useEffect(() => {
-    if (!isTxInputValid || !client || !account?.address || !toAddress) return;
-
-    const anim = setInterval(() => {
-      setLoadingBarStep((prev) => (prev + 1) % loadingFrames.length);
-    }, 100);
-
-    if (recalcTimer.current) clearTimeout(recalcTimer.current);
-    recalcTimer.current = setTimeout(() => {
-      const safeValue = valueInWei || 0;
-      const valueHex = typeof safeValue === 'string' && safeValue.startsWith('0x')
-        ? safeValue
-        : `0x${parseInt(safeValue).toString(16)}`;
-
-      dispatch(
-        estimateGas({
-          client,
-          from: account.address,
-          to: toAddress,
-          data: data || '0x',
-          value: valueHex,
-        })
-      );
-
-      setTimeout(() => clearInterval(anim), 800);
-    }, 400);
-  }, [toAddress, data, valueInWei, client, account.address, isTxInputValid, dispatch]);
-
-  useEffect(() => {
-    if (typeof estimatedGas === 'number' && estimatedGas > 0) {
-      setGas(estimatedGas);
-      setUserGasLimit(estimatedGas);
-    } else {
-      setGas(MIN_GAS);
-      setUserGasLimit(MIN_GAS);
+    if (isTxInputValid && client) {
+      dispatch(estimateGas({
+        client,
+        from: account.address,
+        to: toAddress,
+        data,
+        value: valueInWei,
+      }));
     }
-  }, [estimatedGas]);
+  }, [dispatch, isTxInputValid, client, account.address, toAddress, data, valueInWei]);
 
-  const calculatedMaxFee =
-    parseFloat(gas || MIN_GAS) + parseFloat(feeData.maxPriorityFeePerGas || '0');
+  // Compute gas estimates based on input data
+  // const estimatedGas = await calculateEstimatedGas(isTxInputValid, client, { from: account.address, toAddress, data, valueInWei });
+  const network = emitNetwork(account);
 
-  const useHoldButton = (callback) => {
-    const intervalRef = useRef(null);
-    const start = () => {
-      callback();
-      intervalRef.current = setInterval(callback, 80);
-    };
-    const stop = () => clearInterval(intervalRef.current);
-    return {
-      onMouseDown: start,
-      onMouseUp: stop,
-      onMouseLeave: stop,
-      onTouchStart: start,
-      onTouchEnd: stop,
-    };
-  };
-
-  const gasInc = useHoldButton(() => {
-    setGas((prev) => {
-      const newGas = Math.min(MAX_GAS, Math.max(MIN_GAS, prev + 1000));
-      setUserGasLimit(newGas);
-      return newGas;
-    });
-  });
-
-  const gasDec = useHoldButton(() => {
-    setGas((prev) => {
-      const newGas = Math.max(MIN_GAS, prev - 1000);
-      setUserGasLimit(newGas);
-      return newGas;
-    });
-  });
-
-  const incPriority = useHoldButton(() =>
-    setFeeData((prev) => ({
-      ...prev,
-      maxPriorityFeePerGas: Math.min(MAX_PRIORITY, parseInt(prev.maxPriorityFeePerGas || '1') + 1).toString(),
-    }))
-  );
-
-  const decPriority = useHoldButton(() =>
-    setFeeData((prev) => ({
-      ...prev,
-      maxPriorityFeePerGas: Math.max(MIN_PRIORITY, parseInt(prev.maxPriorityFeePerGas || '1') - 1).toString(),
-    }))
-  );
-
-  const network = account?.status === 'connected' ? account.chain.name : 'Unknown';
+  if (status === 'loading') {
+    return <CircularProgress />
+  }
 
   if (status === 'failed') {
     return (
