@@ -34,6 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             accentColorForeground: 'white',
             borderRadius: 'medium',
           })}>
+            
             <Provider store={store}>
               <RouterProvider router={router} />
             </Provider>
