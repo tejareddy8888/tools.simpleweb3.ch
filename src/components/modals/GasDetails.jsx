@@ -26,7 +26,11 @@ const GasDetailsOutput = ({ txType }) => {
   });
 
   const [loadingBarStep, setLoadingBarStep] = useState(0);
-  const recalcTimer = useRef(null);
+
+  const gasIncTimer = useRef(null);
+  const gasDecTimer = useRef(null);
+  const priorityIncTimer = useRef(null);
+  const priorityDecTimer = useRef(null);
 
   const loadingFrames = [
     '░░░░░░░░', '▓░░░░░░░', '▓▓░░░░░░', '▓▓▓░░░░░',
@@ -45,13 +49,22 @@ const GasDetailsOutput = ({ txType }) => {
     }
   }, [dispatch, isTxInputValid, client, account.address, toAddress, data, valueInWei]);
 
-  // Compute gas estimates based on input data
-  // const estimatedGas = await calculateEstimatedGas(isTxInputValid, client, { from: account.address, toAddress, data, valueInWei });
-  const network = emitNetwork(account);
+  const startHold = (action, timerRef) => {
+    action(); // immediate
+    timerRef.current = setInterval(action, 100);
+  };
 
-  if (status === 'loading') {
-    return <CircularProgress />
-  }
+  const stopHold = (timerRef) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const calculatedMaxFee =
+    parseFloat(feeData.baseFeePerGas) + parseFloat(feeData.maxPriorityFeePerGas);
+
+  const network = client?.chain?.name || 'Unknown Network';
 
   if (status === 'failed') {
     return (
@@ -83,14 +96,30 @@ const GasDetailsOutput = ({ txType }) => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <button {...gasDec} className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs">-</button>
+          <button
+            onMouseDown={() => startHold(() => setGas(prev => Math.max(prev - 1000, MIN_GAS)), gasDecTimer)}
+            onMouseUp={() => stopHold(gasDecTimer)}
+            onMouseLeave={() => stopHold(gasDecTimer)}
+            onTouchStart={() => startHold(() => setGas(prev => Math.max(prev - 1000, MIN_GAS)), gasDecTimer)}
+            onTouchEnd={() => stopHold(gasDecTimer)}
+            className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs"
+          >-</button>
+
           <div className="flex-grow h-4 bg-black relative overflow-hidden border-2 border-black shadow-inner">
             <div
               className="h-full bg-[#d1ff03] transition-all duration-300 ease-out"
               style={{ width: `${((gas - MIN_GAS) / (MAX_GAS - MIN_GAS)) * 100}%` }}
             />
           </div>
-          <button {...gasInc} className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs">+</button>
+
+          <button
+            onMouseDown={() => startHold(() => setGas(prev => Math.min(prev + 1000, MAX_GAS)), gasIncTimer)}
+            onMouseUp={() => stopHold(gasIncTimer)}
+            onMouseLeave={() => stopHold(gasIncTimer)}
+            onTouchStart={() => startHold(() => setGas(prev => Math.min(prev + 1000, MAX_GAS)), gasIncTimer)}
+            onTouchEnd={() => stopHold(gasIncTimer)}
+            className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs"
+          >+</button>
         </div>
       </div>
 
@@ -102,9 +131,45 @@ const GasDetailsOutput = ({ txType }) => {
               {renderAsciiBar(parseInt(feeData.maxPriorityFeePerGas), MAX_PRIORITY)}
             </div>
             <div className="flex items-center space-x-3 mt-2">
-              <button {...decPriority} className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs">-</button>
+              <button
+                onMouseDown={() => startHold(() => {
+                  setFeeData(prev => ({
+                    ...prev,
+                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - 1, MIN_PRIORITY).toString()
+                  }));
+                }, priorityDecTimer)}
+                onMouseUp={() => stopHold(priorityDecTimer)}
+                onMouseLeave={() => stopHold(priorityDecTimer)}
+                onTouchStart={() => startHold(() => {
+                  setFeeData(prev => ({
+                    ...prev,
+                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - 1, MIN_PRIORITY).toString()
+                  }));
+                }, priorityDecTimer)}
+                onTouchEnd={() => stopHold(priorityDecTimer)}
+                className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs"
+              >-</button>
+
               <span className="text-xs text-gray-600">{feeData.maxPriorityFeePerGas} GWEI</span>
-              <button {...incPriority} className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs">+</button>
+
+              <button
+                onMouseDown={() => startHold(() => {
+                  setFeeData(prev => ({
+                    ...prev,
+                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + 1, MAX_PRIORITY).toString()
+                  }));
+                }, priorityIncTimer)}
+                onMouseUp={() => stopHold(priorityIncTimer)}
+                onMouseLeave={() => stopHold(priorityIncTimer)}
+                onTouchStart={() => startHold(() => {
+                  setFeeData(prev => ({
+                    ...prev,
+                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + 1, MAX_PRIORITY).toString()
+                  }));
+                }, priorityIncTimer)}
+                onTouchEnd={() => stopHold(priorityIncTimer)}
+                className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs"
+              >+</button>
             </div>
           </div>
 
