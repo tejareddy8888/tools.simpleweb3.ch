@@ -2,11 +2,10 @@ import { defineChain } from 'viem'
 
 // Define the Hoodi testnet chain
 export const hoodi = defineChain({
-  id: 560048,
-  name: 'Ethereum Hoodi',
-  network: 'hoodi',
+  id: 560_048,
+  name: 'Hoodi',
   nativeCurrency: {
-    name: 'Ethereum',
+    name: 'Hoodi Ether',
     symbol: 'ETH',
     decimals: 18,
   },

@@ -1,8 +1,8 @@
 import React, { useState, } from 'react';
-import { isAddress } from 'viem'
-import { useAccount, useChainId, useClient, useSendTransaction } from 'wagmi'
-import { TransactionContext } from './TransactionContextCore';
+import { isAddress, } from 'viem'
+import { useAccount, useChainId, useClient, useSendTransaction } from 'wagmi';
 
+import { TransactionContext } from './TransactionContextCore';
 
 export const TransactionProvider = ({ children }) => {
     const [toAddress, setToAddress] = useState('');
@@ -12,10 +12,9 @@ export const TransactionProvider = ({ children }) => {
     const chainId = useChainId();
     const account = useAccount();
     const client = useClient();
-    const { sendTransaction } = useSendTransaction()
+    const { sendTransactionAsync } = useSendTransaction();
 
     const validateInputs = () => {
-        console.dir({ toAddress, data, valueInWei, status: account.status });
         const isValidAddress = isAddress(toAddress);
         const isValidData = /^(0x)?([a-fA-F0-9]*)$/.test(data);
 
@@ -34,8 +33,8 @@ export const TransactionProvider = ({ children }) => {
             chainId,
             account,
             client,
-            sendTransaction,
-            validateInputs
+            sendTransactionAsync,
+            validateInputs,
         }}>
             {children}
         </TransactionContext.Provider>

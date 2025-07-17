@@ -1,14 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+
 import { estimateGas } from '../../reducer/gasEstimation';
 import { useTransaction } from '../../context/TransactionContextCore';
+import { MAX_GAS, MIN_GAS, INC_GAS, MAX_PRIORITY, MIN_PRIORITY, INC_PRIORITY, TxType } from '../../web3/web3-constants';
 
-const MAX_GAS = 100000;
-const MIN_GAS = 21000;
-const MAX_PRIORITY = 50;
-const MIN_PRIORITY = 1;
-
-const GasDetailsOutput = ({ txType }) => {
+const GasDetailsOutput = ({ txType, networkFeeData }) => {
   const dispatch = useDispatch();
   const {
     toAddress, data, valueInWei,
@@ -20,8 +17,8 @@ const GasDetailsOutput = ({ txType }) => {
 
   const [gas, setGas] = useState(MIN_GAS);
   const [feeData, setFeeData] = useState({
-    baseFeePerGas: '30',
-    maxPriorityFeePerGas: '2',
+    baseFeePerGas: networkFeeData?.maxFeePerGas ? Math.round(parseInt(networkFeeData?.maxFeePerGas) / 2) : networkFeeData?.gasPrice,
+    maxPriorityFeePerGas: networkFeeData?.maxPriorityFeePerGas,
     maxFeePerGas: '',
   });
 
@@ -97,10 +94,10 @@ const GasDetailsOutput = ({ txType }) => {
 
         <div className="flex items-center space-x-2">
           <button
-            onMouseDown={() => startHold(() => setGas(prev => Math.max(prev - 1000, MIN_GAS)), gasDecTimer)}
+            onMouseDown={() => startHold(() => setGas(prev => Math.max(prev - INC_GAS, MIN_GAS)), gasDecTimer)}
             onMouseUp={() => stopHold(gasDecTimer)}
             onMouseLeave={() => stopHold(gasDecTimer)}
-            onTouchStart={() => startHold(() => setGas(prev => Math.max(prev - 1000, MIN_GAS)), gasDecTimer)}
+            onTouchStart={() => startHold(() => setGas(prev => Math.max(prev - INC_GAS, MIN_GAS)), gasDecTimer)}
             onTouchEnd={() => stopHold(gasDecTimer)}
             className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs"
           >-</button>
@@ -113,17 +110,17 @@ const GasDetailsOutput = ({ txType }) => {
           </div>
 
           <button
-            onMouseDown={() => startHold(() => setGas(prev => Math.min(prev + 1000, MAX_GAS)), gasIncTimer)}
+            onMouseDown={() => startHold(() => setGas(prev => Math.min(prev + INC_GAS, MAX_GAS)), gasIncTimer)}
             onMouseUp={() => stopHold(gasIncTimer)}
             onMouseLeave={() => stopHold(gasIncTimer)}
-            onTouchStart={() => startHold(() => setGas(prev => Math.min(prev + 1000, MAX_GAS)), gasIncTimer)}
+            onTouchStart={() => startHold(() => setGas(prev => Math.min(prev + INC_GAS, MAX_GAS)), gasIncTimer)}
             onTouchEnd={() => stopHold(gasIncTimer)}
             className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs"
           >+</button>
         </div>
       </div>
 
-      {txType === 'id' && (
+      {txType === TxType.EIP1559 && (
         <div className="mt-4 border-t border-black pt-4 text-sm space-y-4">
           <div>
             <div className="font-bold mb-1">→ Max Priority Fee</div>
@@ -135,7 +132,7 @@ const GasDetailsOutput = ({ txType }) => {
                 onMouseDown={() => startHold(() => {
                   setFeeData(prev => ({
                     ...prev,
-                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - 1, MIN_PRIORITY).toString()
+                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - INC_PRIORITY, MIN_PRIORITY).toString()
                   }));
                 }, priorityDecTimer)}
                 onMouseUp={() => stopHold(priorityDecTimer)}
@@ -143,7 +140,7 @@ const GasDetailsOutput = ({ txType }) => {
                 onTouchStart={() => startHold(() => {
                   setFeeData(prev => ({
                     ...prev,
-                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - 1, MIN_PRIORITY).toString()
+                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - INC_PRIORITY, MIN_PRIORITY).toString()
                   }));
                 }, priorityDecTimer)}
                 onTouchEnd={() => stopHold(priorityDecTimer)}
@@ -156,7 +153,7 @@ const GasDetailsOutput = ({ txType }) => {
                 onMouseDown={() => startHold(() => {
                   setFeeData(prev => ({
                     ...prev,
-                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + 1, MAX_PRIORITY).toString()
+                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
                   }));
                 }, priorityIncTimer)}
                 onMouseUp={() => stopHold(priorityIncTimer)}
@@ -164,7 +161,7 @@ const GasDetailsOutput = ({ txType }) => {
                 onTouchStart={() => startHold(() => {
                   setFeeData(prev => ({
                     ...prev,
-                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + 1, MAX_PRIORITY).toString()
+                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
                   }));
                 }, priorityIncTimer)}
                 onTouchEnd={() => stopHold(priorityIncTimer)}

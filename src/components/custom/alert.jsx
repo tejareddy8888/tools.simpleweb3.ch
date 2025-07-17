@@ -1,6 +1,7 @@
 import { styled } from '@mui/system';
 import { AlertTitle } from '@mui/material';
 import React from 'react';
+import { TxType } from '../../web3/web3-constants';
 
 const AddressSpan = styled('span')({
   wordBreak: 'break-all',
@@ -32,9 +33,9 @@ export const CustomNetworkAlert = ({ chainId, address, txType, setTxType }) => {
           <h3 className="mb-4 text-xs font-bold text-black uppercase">Transaction Type</h3>
           <ul className="w-full text-xs font-bold bg-white border-[3px] border-black sm:flex">
             {[
-              { id: 'legacy', label: 'Legacy (Type 0)' },
-              { id: 'id', label: 'EIP-1559 (Type 2)' },
-              { id: 'military', label: 'EIP-2930 (Type 1)' },
+              { id: TxType.LEGACY, label: 'Legacy (Type 0)' },
+              { id: TxType.EIP1559, label: 'EIP-1559 (Type 2)' },
+              { id: TxType.EIP2930, label: 'EIP-2930 (Type 1)' },
             ].map((item) => (
               <li
                 key={item.id}

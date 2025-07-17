@@ -1,7 +1,7 @@
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { isAddress, parseEther } from 'viem';
-import { useSendTransaction, usePrepareTransactionRequest } from 'wagmi';
+import { usePrepareTransactionRequest, useEstimateFeesPerGas } from 'wagmi';
+import { parseUnits } from 'viem';
 
 import ValidateButton from '../components/buttons/ValidateButton';
 import SendToNetworkButton from '../components/buttons/SendToNetworkButton';
@@ -19,16 +19,16 @@ const Body = () => {
     account,
     client,
     toAddress,
-    valueInWei,
     data,
-    userGasLimit
+    valueInWei,
+    sendTransactionAsync
   } = useTransaction();
 
   const [validationPassed, setValidationPassed] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
   const [txType, setTxType] = useState('legacy');
   const [showSendingPopup, setShowSendingPopup] = useState(false);
-
+  const [txRequestData, setTxRequestData] = useState(null);
   const { status: gasEstimationStatus } = useSelector((state) => state.gasEstimation);
 
   const handleValidate = () => {
@@ -38,23 +38,47 @@ const Body = () => {
         errorCode: '501',
         errorMessage: 'Invalid transaction details.',
       });
+      setValidationPassed(false); // Ensure validationPassed is false on invalid input
       return;
     }
     setErrorDetails(null);
     setValidationPassed(true);
   };
 
-  const { data: txRequestData } = usePrepareTransactionRequest({
+  const { data: txData, error } = usePrepareTransactionRequest({
     to: toAddress,
-    value: valueInWei ? parseEther(valueInWei.toString()) : undefined,
+    value: valueInWei ? parseUnits(valueInWei.toString()) : undefined,
     data,
-    gas: userGasLimit ? BigInt(userGasLimit) : undefined,
+    enabled: validationPassed && toAddress && valueInWei && data, // Enable only when validation passed and all params are available
   });
 
-  const { sendTransactionAsync } = useSendTransaction();
+  const {data: networkFeeData } = useEstimateFeesPerGas({ chainId: client?.chain?.id, txType: txType });
+
+  useEffect(() => {
+    if (error) {
+      console.error('error while transaction preparation', error);
+      setErrorDetails({
+        errorCode: '503',
+        errorMessage: 'Failed to prepare transaction request.',
+      });
+      setTxRequestData(null);
+    }
+    if (txData) {
+      setTxRequestData(txData);
+    }
+  }, [txData, error]);
+
 
   const handleSendTransaction = async () => {
     try {
+      console.dir(txRequestData);
+      if (!txRequestData) {
+        setErrorDetails({
+          errorCode: '504',
+          errorMessage: 'No transaction request data available.',
+        });
+        return;
+      }
       setShowSendingPopup(true);
       await sendTransactionAsync(txRequestData);
     } catch (error) {
@@ -67,10 +91,6 @@ const Body = () => {
       setShowSendingPopup(false);
     }
   };
-
-  useEffect(() => {
-    // Optional: can trigger side effects when tx inputs change
-  }, [toAddress, txRequestData]);
 
   const isAccountConnected = account.status === 'connected';
 
@@ -99,7 +119,7 @@ const Body = () => {
         {validationPassed ? (
           <div className="bg-black bg-opacity-25 p-4 rounded-lg shadow-md">
             <Suspense fallback={<div>Loading gas details...</div>}>
-              <GasDetailsOutput txType={txType} />
+              <GasDetailsOutput txType={txType} networkFeeData={networkFeeData} />
             </Suspense>
             <div className="mt-4">
               <SendToNetworkButton
