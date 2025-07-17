@@ -17,8 +17,8 @@ const GasDetailsOutput = ({ txType, networkFeeData }) => {
 
   const [gas, setGas] = useState(MIN_GAS);
   const [feeData, setFeeData] = useState({
-    baseFeePerGas: networkFeeData?.maxFeePerGas ? Math.round(parseInt(networkFeeData?.maxFeePerGas) / 2) : networkFeeData?.gasPrice,
-    maxPriorityFeePerGas: networkFeeData?.maxPriorityFeePerGas,
+    baseFeePerGas: networkFeeData.formatted?.maxFeePerGas ? Math.round(parseInt(networkFeeData.formatted?.maxFeePerGas) / 2) : networkFeeData.formatted?.gasPrice,
+    maxPriorityFeePerGas: networkFeeData.formatted?.maxPriorityFeePerGas,
     maxFeePerGas: '',
   });
 
@@ -153,7 +153,7 @@ const GasDetailsOutput = ({ txType, networkFeeData }) => {
                 onMouseDown={() => startHold(() => {
                   setFeeData(prev => ({
                     ...prev,
-                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
+                    maxPriorityFeePerGas: Math.min(parseFloat(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
                   }));
                 }, priorityIncTimer)}
                 onMouseUp={() => stopHold(priorityIncTimer)}
@@ -161,7 +161,7 @@ const GasDetailsOutput = ({ txType, networkFeeData }) => {
                 onTouchStart={() => startHold(() => {
                   setFeeData(prev => ({
                     ...prev,
-                    maxPriorityFeePerGas: Math.min(parseInt(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
+                    maxPriorityFeePerGas: Math.min(parseFloat(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
                   }));
                 }, priorityIncTimer)}
                 onTouchEnd={() => stopHold(priorityIncTimer)}

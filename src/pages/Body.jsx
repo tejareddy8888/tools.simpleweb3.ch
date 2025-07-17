@@ -53,7 +53,7 @@ const Body = () => {
   });
 
   const {data: networkFeeData } = useEstimateFeesPerGas({ chainId: client?.chain?.id, txType: txType });
-
+  console.log('network fee data:', networkFeeData);
   useEffect(() => {
     if (error) {
       console.error('error while transaction preparation', error);
