@@ -1,40 +1,44 @@
-# tools.simpleweb3.ch
+#  tools.simpleweb3.ch
 
-## To Run 
+> A retro-themed Web3 developer tool for submitting Ethereum transactions with ease. Designed with a pixel UI, powered by Framer Motion, Wagmi, and WalletConnect.
 
-### Pre-Requisites
-> 1. Nodejs version 20+
+---
 
-### Installation
+## 📌 Overview
 
+This project helps developers simulate and submit Ethereum transactions in a pixelated interface.
+
+- Supports **EVM-compatible transactions**
+- Includes **gas estimations**, **transaction types**, and **wallet integrations**
+- Designed with **retro pixel UI** and **fluid animations**
+- Built using **React + Tailwind + Wagmi**
+
+---
+
+## Dependencies
+
+Install all the required packages with:
+
+```bash
+npm install react react-dom react-router-dom
+npm install tailwindcss postcss autoprefixer
+npm install framer-motion
+npm install pixel-retroui@latest
+npm install wagmi viem
+npm install vite 
+npm install @vitejs/plugin-react --save-dev
+```
+## Install all dependencies
 ```bash
 npm install
 ```
-
-### Have a environment variable 
-```bash
-mv .env.example .env
-# DONT FORGET TO UPDATE ENVIRONMENT VARIABLE 
-# FETCH THE PROJECT ID FROM https://cloud.walletconnect.com/
-```
-
-### Start the website for development
-
+## Development Mode
 ```bash
 npm run dev
 ```
-
-### Start the website for production(Two Steps)
-
-first build
+## Production Mode
 ```bash
-npm run build 
-```
-
-then preview
-```bash
-npm run preview 
-```
-
+npm run build
+npm run preview
 ```
 
