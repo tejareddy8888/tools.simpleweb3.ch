@@ -1,0 +1,52 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Raspberry Pi
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SSH & Deploy to Pi
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.RPI_SSH_HOST }}
+          username: ${{ secrets.RPI_SSH_USER }}
+          key: ${{ secrets.RPI_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            cd ~/your-project-folder
+
+
+            git fetch --all
+            git reset --hard origin/main
+            git clean -fd
+
+            echo "Writing .env securely"
+            echo "${{ secrets.ENV_FILE }}" > .env
+            chmod 600 .env
+
+            echo "Stopping old container "
+            docker stop my-app || echo "No container to stop"
+            docker rm my-app || echo "No container to remove"
+
+            echo "Building Docker image"
+            docker build -t my-app:latest .
+
+            echo " Running container"
+            docker run -d \
+              --name my-app \
+              -p 4173:4173 \
+              --restart=unless-stopped \
+              --env-file .env \
+              my-app:latest
+
+            echo "Deployed"
