@@ -2,7 +2,8 @@ import { createBrowserRouter } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import About from "./pages/About.jsx";
 import LandingPage from "./pages/LandingPage";
-import Converter from './pages/Converter'; // Add this import
+import Converter from './pages/Converter'; 
+import Sign from "./pages/Sign.jsx";
 
 const router = createBrowserRouter([
   {
@@ -18,7 +19,11 @@ const router = createBrowserRouter([
     element: <About />,
   },
   {
-    path: 'converter', // Add this route
+    path: 'sign', 
+    element: <Sign />,
+  },
+  {
+    path: 'converter', 
     element: <Converter />,
   },
 ]);

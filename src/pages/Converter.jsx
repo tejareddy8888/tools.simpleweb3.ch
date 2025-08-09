@@ -1,53 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import RetroUltimateConverter from '../components/components/widgets/HexDecCalculator.jsx';
+import SharedHeader from '../components/crucial/SharedHeader';
 
 const Converter = () => {
     const [activeTab, setActiveTab] = useState('calculator');
 
     return (
         <div className="min-h-screen w-full px-4 py-12 bg-gradient-to-br from-customCyan to-customPurple">
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-['Press_Start_2P'] text-white mb-4">
-                        Web3 Converter Tools
-                    </h1>
-                    <p className="text-lg text-white/80 font-open-sans">
-                        Convert between different blockchain units and formats
-                    </p>
-                </div>
+            <SharedHeader showConnectButton={false} showMenu={true} />
+            <div className="px-4 py-12 pt-24">
+                <div className="max-w-6xl mx-auto">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <h1 className="text-4xl font-['Press_Start_2P'] text-white mb-4">
+                            Web3 Converter Tools
+                        </h1>
+                        <p className="text-lg text-white/80 font-open-sans">
+                            Convert between different blockchain units and formats
+                        </p>
+                    </div>
 
-                {/* Tab Navigation */}
-                <div className="flex justify-center mb-8">
-                    <div className="bg-black border-4 border-white p-2 flex gap-2">
-                        {[
-                            { id: 'calculator', label: 'Calculator' },
-                            { id: 'solana', label: 'Solana' },
-                            { id: 'custom', label: 'Custom' }
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`
+                    {/* Tab Navigation */}
+                    <div className="flex justify-center mb-8">
+                        <div className="bg-black border-4 border-white p-2 flex gap-2">
+                            {[
+                                { id: 'calculator', label: 'Calculator' },
+                                { id: 'solana', label: 'Solana' },
+                                { id: 'custom', label: 'Custom' }
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`
                   px-6 py-3 border-2 border-black font-['Press_Start_2P'] text-xs
                   transition-all duration-200
                   ${activeTab === tab.id
-                                        ? 'bg-customTangerine text-black shadow-[4px_4px_0_0_black]'
-                                        : 'bg-white text-black hover:bg-gray-200'
-                                    }
+                                            ? 'bg-customTangerine text-black shadow-[4px_4px_0_0_black]'
+                                            : 'bg-white text-black hover:bg-gray-200'
+                                        }
                 `}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                {/* Content Area */}
-                <div className="flex justify-center">
-                    {activeTab === 'calculator' && <RetroUltimateConverter />}
-                    {activeTab === 'solana' && <SolanaConverter />}
-                    {activeTab === 'custom' && <CustomConverter />}
+                    {/* Content Area */}
+                    <div className="flex justify-center">
+                        {activeTab === 'calculator' && <RetroUltimateConverter />}
+                        {activeTab === 'solana' && <SolanaConverter />}
+                        {activeTab === 'custom' && <CustomConverter />}
+                    </div>
                 </div>
             </div>
         </div>
@@ -298,7 +302,7 @@ const CustomConverter = () => {
                 </div>
             </div>
 
-  
+
             {/* From Unit */}
             <div className="mb-4">
                 <label className="block text-xs mb-2">From:</label>

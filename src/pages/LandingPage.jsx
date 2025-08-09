@@ -130,7 +130,7 @@ const LandingPage = () => {
         className="w-full h-40 sm:h-52 md:h-60 bg-cover bg-center"
         style={{ backgroundImage: "url('/chainIcons/login.png')" }}
       />
-      <Link to="">
+      <Link to="/sign">
         <CardContent className="space-y-3">
           <h2 className="text-2xl leading-snug text-customOlive">Sign</h2>
         </CardContent>
@@ -232,7 +232,7 @@ const LandingPage = () => {
           <section className="grid w-full max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {/* i = index to stagger & direction; comingSoon = true except first */}
             <AnimatedCard i={0} comingSoon={false}><SendTxCard /></AnimatedCard>
-            <AnimatedCard i={1} comingSoon={true}><SignCard /></AnimatedCard>
+            <AnimatedCard i={1} comingSoon={false}><SignCard /></AnimatedCard>
             <AnimatedCard i={2} comingSoon={true}><VerifyCard /></AnimatedCard>
             <AnimatedCard i={3} comingSoon={true}><ReadCard /></AnimatedCard>
             <AnimatedCard i={4} comingSoon={false}><ConvertorCard /></AnimatedCard>
