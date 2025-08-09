@@ -25,7 +25,7 @@ jobs:
           script: |
             # Source the profile to load environment variables
             source ~/.bashrc || source ~/.profile || true
-            
+
             echo "🔗 SSH Connection successful!"
             echo "📍 Current directory: $(pwd)"
             echo "👤 Current user: $(whoami)"
@@ -34,3 +34,20 @@ jobs:
             echo "💻 System info: $(uname -a)"
             echo "📦 Node.js version: $(node --version 2>/dev/null || echo 'Node.js not installed')"
             echo "📦 npm version: $(npm --version 2>/dev/null || echo 'npm not installed')"
+
+
+            # Try common node installation paths
+            for path in /usr/bin/node /usr/local/bin/node ~/.nvm/versions/node/*/bin/node; do
+              if [ -f "$path" ]; then
+                echo "📦 Found Node.js at: $path ($(${path} --version))"
+                NODE_PATH="$path"
+                NPM_PATH="$(dirname $path)/npm"
+                break
+              fi
+            done
+            
+            if [ -n "$NODE_PATH" ]; then
+              echo "📦 npm version: $(${NPM_PATH} --version 2>/dev/null || echo 'npm not found')"
+            else
+              echo "❌ Node.js not found in common locations"
+            fi
