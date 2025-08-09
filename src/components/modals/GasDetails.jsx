@@ -1,197 +1,403 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+// src/components/modals/GasDetails.jsx
+import React, { useEffect, useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { estimateGas } from "../../reducer/gasEstimation";
+import { useTransaction } from "../../context/TransactionContextCore";
 
-import { estimateGas } from '../../reducer/gasEstimation';
-import { useTransaction } from '../../context/TransactionContextCore';
-import { MAX_GAS, MIN_GAS, INC_GAS, MAX_PRIORITY, MIN_PRIORITY, INC_PRIORITY, TxType } from '../../web3/web3-constants';
+// ────────────────────────────── Constants ──────────────────────────────
+const MAX_GAS = 1_000_000;
+const MIN_GAS = 21_000;
+const MAX_PRIORITY = 50;
+const MIN_PRIORITY = 1;
 
-const GasDetailsOutput = ({ txType, networkFeeData }) => {
+const LOADING_FRAMES = [
+  "░░░░░░░░",
+  "▓░░░░░░░",
+  "▓▓░░░░░░",
+  "▓▓▓░░░░░",
+  "▓▓▓▓░░░░",
+  "▓▓▓▓▓░░░",
+  "▓▓▓▓▓▓░░",
+  "▓▓▓▓▓▓▓░",
+  "▓▓▓▓▓▓▓▓",
+];
+
+// ────────────────────────── Small UI helpers ───────────────────────────
+const PresetBtn = ({ label, onClick, title }) => (
+  <button
+    type="button"
+    title={title}
+    onClick={onClick}
+    className="px-2 py-1 text-[10px] border-2 border-black bg-[#d1ff03] hover:bg-[#c1ef00]
+               shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px]"
+    style={{ imageRendering: "pixelated" }}
+  >
+    {label}
+  </button>
+);
+
+const HoldBtn = ({ label, onPressStart, onPressEnd, color = "#d1ff03", invertText = false }) => (
+  <button
+    type="button"
+    onMouseDown={onPressStart}
+    onMouseUp={onPressEnd}
+    onMouseLeave={onPressEnd}
+    onTouchStart={onPressStart}
+    onTouchEnd={onPressEnd}
+    className={`px-3 py-1 text-xs border-2 border-black shadow-[3px_3px_0_0_#000] ${
+      invertText ? "text-white" : "text-black"
+    }`}
+    style={{ background: color, imageRendering: "pixelated" }}
+  >
+    {label}
+  </button>
+);
+
+// Inline CSS for the pixel slider (no extra files)
+const PixelRangeStyles = () => (
+  <style>{`
+    .pixel-range {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 18px;
+      border: 2px solid #000;
+      box-shadow: inset 0 0 0 2px #000, 3px 3px 0 0 #000;
+      image-rendering: pixelated;
+      background-image:
+        linear-gradient(to right, #d1ff03 var(--fill, 0%), transparent var(--fill, 0%)),
+        repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 12px),
+        linear-gradient(#fffbe6, #fffbe6);
+      background-size: 100% 100%, 100% 100%, 100% 100%;
+      background-repeat: no-repeat;
+    }
+    .pixel-range:focus { outline: none; }
+    .pixel-range::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; background: #d1ff03;
+      border: 2px solid #000; box-shadow: 2px 2px 0 #000; margin-top: -2px;
+    }
+    .pixel-range::-moz-range-thumb {
+      width: 18px; height: 18px; background: #d1ff03;
+      border: 2px solid #000; box-shadow: 2px 2px 0 #000;
+    }
+    .pixel-range::-moz-range-track { height: 18px; background: transparent; border: none; }
+    .pixel-range:active::-webkit-slider-thumb,
+    .pixel-range:active::-moz-range-thumb { transform: translate(1px,1px); }
+  `}</style>
+);
+
+// ───────────────────────── Component ─────────────────────────
+const GasDetailsOutput = ({ txType }) => {
   const dispatch = useDispatch();
   const {
-    toAddress, data, valueInWei,
-    account, client, isTxInputValid,
-    userGasLimit, setUserGasLimit,
+    toAddress,
+    data,
+    valueInWei,
+    account,
+    client,
+    isTxInputValid,
+    setUserGasLimit,
   } = useTransaction();
 
-  const { estimatedGas, status, error } = useSelector((state) => state.gasEstimation);
+  const { estimatedGas, status, error } = useSelector((s) => s.gasEstimation);
 
+  // UI state
   const [gas, setGas] = useState(MIN_GAS);
   const [feeData, setFeeData] = useState({
-    baseFeePerGas: networkFeeData.formatted?.maxFeePerGas ? Math.round(parseInt(networkFeeData.formatted?.maxFeePerGas) / 2) : networkFeeData.formatted?.gasPrice,
-    maxPriorityFeePerGas: networkFeeData.formatted?.maxPriorityFeePerGas,
-    maxFeePerGas: '',
+    baseFeePerGas: "30",
+    maxPriorityFeePerGas: "2",
   });
 
-  const [loadingBarStep, setLoadingBarStep] = useState(0);
+  // debounced “recalculating…” state + simple ASCII loader
+  const [debouncing, setDebouncing] = useState(false);
+  const [frame, setFrame] = useState(0);
 
+  // timers for holding +/- buttons
   const gasIncTimer = useRef(null);
   const gasDecTimer = useRef(null);
   const priorityIncTimer = useRef(null);
   const priorityDecTimer = useRef(null);
+  const debounceTimer = useRef(null);
 
-  const loadingFrames = [
-    '░░░░░░░░', '▓░░░░░░░', '▓▓░░░░░░', '▓▓▓░░░░░',
-    '▓▓▓▓░░░░', '▓▓▓▓▓░░░', '▓▓▓▓▓▓░░', '▓▓▓▓▓▓▓░', '▓▓▓▓▓▓▓▓'
-  ];
-
+  // ── Debounce re-estimates by 3s after any relevant input change
   useEffect(() => {
-    if (isTxInputValid && client) {
-      dispatch(estimateGas({
-        client,
-        from: account.address,
-        to: toAddress,
-        data,
-        value: valueInWei,
-      }));
-    }
-  }, [dispatch, isTxInputValid, client, account.address, toAddress, data, valueInWei]);
+    if (!(isTxInputValid && client && account?.address)) return;
+    setDebouncing(true);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-  const startHold = (action, timerRef) => {
-    action(); // immediate
-    timerRef.current = setInterval(action, 100);
+    debounceTimer.current = setTimeout(() => {
+      dispatch(
+        estimateGas({
+          client,
+          account: account.address,
+          from: account.address,
+          to: toAddress,
+          data,
+          value: valueInWei,
+        })
+      );
+      setDebouncing(false);
+    }, 3000);
+
+    return () => debounceTimer.current && clearTimeout(debounceTimer.current);
+  }, [dispatch, isTxInputValid, client, account?.address, toAddress, data, valueInWei]);
+
+  // ASCII progress animation while debouncing or Redux is loading
+  useEffect(() => {
+    if (debouncing || status === "loading") {
+      const id = setInterval(() => setFrame((p) => (p + 1) % LOADING_FRAMES.length), 150);
+      return () => clearInterval(id);
+    }
+  }, [debouncing, status]);
+
+  // adopt estimate
+  useEffect(() => {
+    if (estimatedGas && status === "succeeded") {
+      setGas(clamp(Number(estimatedGas)));
+    }
+  }, [estimatedGas, status]);
+
+  // reflect gas into context (for the actual send)
+  useEffect(() => {
+    setUserGasLimit?.(gas);
+  }, [gas, setUserGasLimit]);
+
+  // hold-to-repeat helpers
+  const startHold = (fn, ref) => {
+    fn();
+    ref.current = setInterval(fn, 100);
+  };
+  const stopHold = (ref) => {
+    if (ref.current) clearInterval(ref.current);
+    ref.current = null;
   };
 
-  const stopHold = (timerRef) => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  };
+  const percent = ((gas - MIN_GAS) / (MAX_GAS - MIN_GAS)) * 100;
+  const maxFee =
+    parseFloat(feeData.baseFeePerGas || "0") + parseFloat(feeData.maxPriorityFeePerGas || "0");
 
-  const calculatedMaxFee =
-    parseFloat(feeData.baseFeePerGas) + parseFloat(feeData.maxPriorityFeePerGas);
+  const networkName = client?.chain?.name || "Unknown";
 
-  const network = client?.chain?.name || 'Unknown Network';
-
-  if (status === 'failed') {
+  // ── Error state
+  if (status === "failed") {
     return (
-      <div className="p-4 bg-white border-2 border-red-600 text-red-500 font-mono">
-        Error: {error}
-      </div>
-    );
-  }
-
-  if (status === 'loading') {
-    return (
-      <div className="p-4 bg-black border-2 border-yellow-400 font-mono text-lime-300 text-xs w-full max-w-md mx-auto">
-        <pre> Recalculating Gas Module [{loadingFrames[loadingBarStep]}]</pre>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative px-4 py-5 bg-white text-black border-4 border-black mb-6 w-full max-w-md mx-auto my-auto font-mono" style={{ imageRendering: 'pixelated' }}>
-      <h2 className="text-lg font-['Press_Start_2P'] mb-4">Network Details</h2>
-
-      <div className="text-sm mb-4">
-        <div className="mb-2">
-          <span className="font-bold">→ Gas:</span>{' '}
-          <span className="text-[#6200ea]">
-            0x{parseInt(gas || MIN_GAS).toString(16).toUpperCase()}
-          </span>{' '}
-          <span className="ml-1 text-gray-700">({gas || MIN_GAS} units)</span>
+      <>
+        <PixelRangeStyles />
+        <div className="relative p-4 bg-white border-4 border-red-600 text-red-600 font-mono shadow-[6px_6px_0_0_#000]">
+          <div className="absolute top-0 left-0 w-2 h-2 bg-black" />
+          <div className="absolute top-0 right-0 w-2 h-2 bg-black" />
+          <div className="absolute bottom-0 left-0 w-2 h-2 bg-black" />
+          <div className="absolute bottom-0 right-0 w-2 h-2 bg-black" />
+          <div className="text-xs font-bold">❌ GAS MODULE ERROR</div>
+          <div className="mt-2 text-[11px]">{String(error || "Unknown error")}</div>
         </div>
+      </>
+    );
+  }
 
-        <div className="flex items-center space-x-2">
-          <button
-            onMouseDown={() => startHold(() => setGas(prev => Math.max(prev - INC_GAS, MIN_GAS)), gasDecTimer)}
-            onMouseUp={() => stopHold(gasDecTimer)}
-            onMouseLeave={() => stopHold(gasDecTimer)}
-            onTouchStart={() => startHold(() => setGas(prev => Math.max(prev - INC_GAS, MIN_GAS)), gasDecTimer)}
-            onTouchEnd={() => stopHold(gasDecTimer)}
-            className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs"
-          >-</button>
+  // ── Debounce/Loading state (calm, non‑glitchy)
+  if (debouncing || status === "loading") {
+    return (
+      <>
+        <PixelRangeStyles />
+        <div
+          className="relative p-4 bg-white border-[6px] border-black font-mono shadow-[6px_6px_0_0_#000]"
+          style={{ imageRendering: "pixelated" }}
+        >
+          <div className="absolute top-0 left-0 w-2 h-2 bg-black" />
+          <div className="absolute top-0 right-0 w-2 h-2 bg-black" />
+          <div className="absolute bottom-0 left-0 w-2 h-2 bg-black" />
+          <div className="absolute bottom-0 right-0 w-2 h-2 bg-black" />
 
-          <div className="flex-grow h-4 bg-black relative overflow-hidden border-2 border-black shadow-inner">
-            <div
-              className="h-full bg-[#d1ff03] transition-all duration-300 ease-out"
-              style={{ width: `${((gas - MIN_GAS) / (MAX_GAS - MIN_GAS)) * 100}%` }}
+          <div className="text-xs font-bold">Recalculating Gas…</div>
+          <pre className="mt-2 text-xs tracking-widest">[{LOADING_FRAMES[frame]}]</pre>
+
+          <div className="mt-3 h-2 bg-black border-2 border-black">
+            <div className="h-full bg-[#d1ff03] animate-pulse" style={{ width: "60%" }} />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── Main UI
+  return (
+    <>
+      <PixelRangeStyles />
+      <div
+        className="relative px-4 py-5 bg-white text-black border-[6px] border-black mb-6 w-full max-w-2xl mx-auto shadow-[6px_6px_0_0_#000]"
+        style={{ imageRendering: "pixelated" }}
+      >
+        {/* corners */}
+        <div className="absolute top-0 left-0 w-2 h-2 bg-black" />
+        <div className="absolute top-0 right-0 w-2 h-2 bg-black" />
+        <div className="absolute bottom-0 left-0 w-2 h-2 bg-black" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 bg-black" />
+
+        {/* Heading */}
+        <h2 className="text-sm sm:text-base font-['Press_Start_2P'] mb-4">GAS LAB</h2>
+
+        {/* Gas readout + presets */}
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+          <div>
+            <span className="font-bold">→ Gas:</span>{" "}
+            <span className="text-[#6200ea]">0x{parseFloat(gas).toString(16).toUpperCase()}</span>
+            <span className="ml-1 text-gray-700">({gas} units)</span>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <PresetBtn label="LOW" onClick={() => setGas(clamp(MIN_GAS + 5_000))} />
+            <PresetBtn label="AVG" onClick={() => setGas(clamp(Math.round((MIN_GAS + MAX_GAS) / 2)))} />
+            <PresetBtn label="FAST" onClick={() => setGas(clamp(MAX_GAS - 5_000))} />
+            <PresetBtn  
+              label="EST"
+              title="Use estimate"
+              onClick={() => estimatedGas && setGas(clamp(Number(estimatedGas)))}
             />
           </div>
-
-          <button
-            onMouseDown={() => startHold(() => setGas(prev => Math.min(prev + INC_GAS, MAX_GAS)), gasIncTimer)}
-            onMouseUp={() => stopHold(gasIncTimer)}
-            onMouseLeave={() => stopHold(gasIncTimer)}
-            onTouchStart={() => startHold(() => setGas(prev => Math.min(prev + INC_GAS, MAX_GAS)), gasIncTimer)}
-            onTouchEnd={() => stopHold(gasIncTimer)}
-            className="px-2 py-1 bg-[#d1ff03] border-2 border-black shadow-md text-xs"
-          >+</button>
         </div>
-      </div>
 
-      {txType === TxType.EIP1559 && (
-        <div className="mt-4 border-t border-black pt-4 text-sm space-y-4">
-          <div>
-            <div className="font-bold mb-1">→ Max Priority Fee</div>
-            <div className="bg-black text-[#d1ff03] px-3 py-2 text-sm border-2 border-black inline-block font-mono tracking-widest">
-              {renderAsciiBar(parseInt(feeData.maxPriorityFeePerGas), MAX_PRIORITY)}
-            </div>
-            <div className="flex items-center space-x-3 mt-2">
-              <button
-                onMouseDown={() => startHold(() => {
-                  setFeeData(prev => ({
-                    ...prev,
-                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - INC_PRIORITY, MIN_PRIORITY).toString()
-                  }));
-                }, priorityDecTimer)}
-                onMouseUp={() => stopHold(priorityDecTimer)}
-                onMouseLeave={() => stopHold(priorityDecTimer)}
-                onTouchStart={() => startHold(() => {
-                  setFeeData(prev => ({
-                    ...prev,
-                    maxPriorityFeePerGas: Math.max(parseInt(prev.maxPriorityFeePerGas) - INC_PRIORITY, MIN_PRIORITY).toString()
-                  }));
-                }, priorityDecTimer)}
-                onTouchEnd={() => stopHold(priorityDecTimer)}
-                className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs"
-              >-</button>
-
-              <span className="text-xs text-gray-600">{feeData.maxPriorityFeePerGas} GWEI</span>
-
-              <button
-                onMouseDown={() => startHold(() => {
-                  setFeeData(prev => ({
-                    ...prev,
-                    maxPriorityFeePerGas: Math.min(parseFloat(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
-                  }));
-                }, priorityIncTimer)}
-                onMouseUp={() => stopHold(priorityIncTimer)}
-                onMouseLeave={() => stopHold(priorityIncTimer)}
-                onTouchStart={() => startHold(() => {
-                  setFeeData(prev => ({
-                    ...prev,
-                    maxPriorityFeePerGas: Math.min(parseFloat(prev.maxPriorityFeePerGas) + INC_PRIORITY, MAX_PRIORITY).toString()
-                  }));
-                }, priorityIncTimer)}
-                onTouchEnd={() => stopHold(priorityIncTimer)}
-                className="px-2 py-1 bg-[#ff03e2] border-2 border-black shadow-md text-white text-xs"
-              >+</button>
-            </div>
+        {/* Slider + hold buttons */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <HoldBtn
+              label="-"
+              onPressStart={() => startHold(() => setGas((p) => clamp(p - 1000)), gasDecTimer)}
+              onPressEnd={() => stopHold(gasDecTimer)}
+              color="#d1ff03"
+            />
+            <input
+              type="range"
+              min={MIN_GAS}
+              max={MAX_GAS}
+              step={1000}
+              value={gas}
+              onChange={(e) => setGas(clamp(Number(e.target.value)))}
+              className="pixel-range flex-1"
+              style={{ "--fill": `${percent}%` }}
+            />
+            <HoldBtn
+              label="+"
+              onPressStart={() => startHold(() => setGas((p) => clamp(p + 1000)), gasIncTimer)}
+              onPressEnd={() => stopHold(gasIncTimer)}
+              color="#d1ff03"
+            />
           </div>
-
-          <div>
-            <div className="font-bold">→ Max Fee:</div>
-            <div>{calculatedMaxFee.toFixed(2)} GWEI</div>
+          <div className="flex justify-between text-[9px] text-gray-700">
+            <span>MIN</span>
+            <span>{Math.round(percent)}%</span>
+            <span>MAX</span>
           </div>
         </div>
-      )}
 
-      <div className="text-sm mt-4">
-        <span className="font-bold">→ Network :</span>{' '}
-        <span className="text-[#007bff]">{network}</span>
+        {/* EIP‑1559 (Type 2) */}
+        {txType === "id" && (
+          <div className="mt-5 border-t-2 border-black pt-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Priority fee */}
+              <div>
+                <div className="font-bold mb-2 text-sm">→ Max Priority Fee</div>
+                <input
+                  type="range"
+                  min={MIN_PRIORITY}
+                  max={MAX_PRIORITY}
+                  step={1}
+                  value={parseInt(feeData.maxPriorityFeePerGas) || MIN_PRIORITY}
+                  onChange={(e) =>
+                    setFeeData((p) => ({ ...p, maxPriorityFeePerGas: String(e.target.value) }))
+                  }
+                  className="pixel-range w-full"
+                  style={{
+                    "--fill": `${
+                      ((parseInt(feeData.maxPriorityFeePerGas || "0") - MIN_PRIORITY) /
+                        (MAX_PRIORITY - MIN_PRIORITY)) *
+                      100
+                    }%`,
+                  }}
+                />
+                <div className="mt-2 flex items-center gap-3">
+                  <HoldBtn
+                    label="-"
+                    color="#ff03e2"
+                    invertText
+                    onPressStart={() =>
+                      startHold(
+                        () =>
+                          setFeeData((prev) => ({
+                            ...prev,
+                            maxPriorityFeePerGas: Math.max(
+                              parseInt(prev.maxPriorityFeePerGas) - 1,
+                              MIN_PRIORITY
+                            ).toString(),
+                          })),
+                        priorityDecTimer
+                      )
+                    }
+                    onPressEnd={() => stopHold(priorityDecTimer)}
+                  />
+                  <span className="text-xs text-gray-700">
+                    {feeData.maxPriorityFeePerGas} GWEI
+                  </span>
+                  <HoldBtn
+                    label="+"
+                    color="#ff03e2"
+                    invertText
+                    onPressStart={() =>
+                      startHold(
+                        () =>
+                          setFeeData((prev) => ({
+                            ...prev,
+                            maxPriorityFeePerGas: Math.min(
+                              parseInt(prev.maxPriorityFeePerGas) + 1,
+                              MAX_PRIORITY
+                            ).toString(),
+                          })),
+                        priorityIncTimer
+                      )
+                    }
+                    onPressEnd={() => stopHold(priorityIncTimer)}
+                  />
+                </div>
+              </div>
+
+              {/* Max fee (readout + quick presets) */}
+              <div>
+                <div className="font-bold text-sm mb-2">→ Max Fee</div>
+                <div className="px-3 py-2 border-2 border-black bg-[#FFFCE5] inline-block text-sm">
+                  {Number.isFinite(maxFee) ? maxFee.toFixed(2) : "--"} GWEI
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <PresetBtn
+                    label="SAFE"
+                    onClick={() => setFeeData((p) => ({ ...p, maxPriorityFeePerGas: "2" }))}
+                  />
+                  <PresetBtn
+                    label="BOOST"
+                    onClick={() => setFeeData((p) => ({ ...p, maxPriorityFeePerGas: "5" }))}
+                  />
+                  <PresetBtn
+                    label="MAX"
+                    onClick={() =>
+                      setFeeData((p) => ({ ...p, maxPriorityFeePerGas: String(MAX_PRIORITY) }))
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Network section */}
+        <div className="mt-5 p-3 border-2 border-black bg-[#FFFCE5] inline-flex items-center gap-3 text-[11px]">
+          <span className="font-bold">→ Network:</span>
+          <span className="text-[#007bff]">{networkName}</span>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
-function renderAsciiBar(value, max, length = 10) {
-  const percentage = value / max;
-  const filled = Math.round(percentage * length);
-  const empty = length - filled;
-  const bar = '█'.repeat(filled) + ' '.repeat(empty);
-  const label = percentage < 0.33 ? 'SLOW' : percentage < 0.66 ? 'NORMAL' : 'FAST';
-  return `[${bar}] ${label}`;
+// ─────────────────────────── Helpers ───────────────────────────
+function clamp(v) {
+  return Math.max(MIN_GAS, Math.min(v, MAX_GAS));
 }
 
 export default GasDetailsOutput;
