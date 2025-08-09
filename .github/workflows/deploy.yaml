@@ -14,43 +14,43 @@ jobs:
 
       - name: SSH & Deploy to Pi
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          PROJECT_DIR: ${{ secrets.RPI_TOOLS_DIR }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           envs: PROJECT_DIR
-        env:
-          PROJECT_DIR: ${{ secrets.RPI_TOOLS_DIR }}
-        script: |
-          set -e
+          script: |
+            set -e
 
-          # Check if Node.js is installed, if not install it
-          if ! command -v node &> /dev/null; then
-            echo "📥 Installing Node.js..."
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-          else
-            echo "✅ Node.js is already installed: $(node --version)"
-          fi
+            # Check if Node.js is installed, if not install it
+            if ! command -v node &> /dev/null; then
+              echo "📥 Installing Node.js..."
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            else
+              echo "✅ Node.js is already installed: $(node --version)"
+            fi
 
-          # Verify npm is available
-          npm --version
+            # Verify npm is available
+            npm --version
 
-          echo "📁 Setting up project directory: $PROJECT_DIR"
-          mkdir -p "$PROJECT_DIR"
-          cd "$PROJECT_DIR"
+            echo "📁 Setting up project directory: $PROJECT_DIR"
+            mkdir -p "$PROJECT_DIR"
+            cd "$PROJECT_DIR"
 
-          echo $(pwd)
-          
-          # Update repository
-          echo "🔄 Updating repository..."
-          git fetch --all
-          git reset --hard origin/main
-          git clean -fd
+            echo $(pwd)
+            
+            # Update repository
+            echo "🔄 Updating repository..."
+            git fetch --all
+            git reset --hard origin/main
+            git clean -fd
 
-          echo "📦 Installing dependencies..."
-          npm ci
+            echo "📦 Installing dependencies..."
+            npm ci
 
-          echo "🏗️ Building project..."
-          npm run build
+            echo "🏗️ Building project..."
+            npm run build
