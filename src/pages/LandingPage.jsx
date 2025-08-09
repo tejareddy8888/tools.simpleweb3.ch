@@ -124,7 +124,7 @@ const LandingPage = () => {
     </Card>
   );
 
-  const LoginCard = () => (
+  const SignCard = () => (
     <Card className="flex flex-col rounded-none border-[6px] border-black shadow-[6px_6px_0_0_black]">
       <div
         className="w-full h-40 sm:h-52 md:h-60 bg-cover bg-center"
@@ -132,10 +132,10 @@ const LandingPage = () => {
       />
       <Link to="">
         <CardContent className="space-y-3">
-          <h2 className="text-2xl leading-snug text-customOlive">Login</h2>
+          <h2 className="text-2xl leading-snug text-customOlive">Sign</h2>
         </CardContent>
       </Link>
-      <CtaRow to="/login" label="Login" />
+      <CtaRow to="/sign" label="Generate Signature" />
     </Card>
   );
 
@@ -150,7 +150,7 @@ const LandingPage = () => {
           <h2 className="text-2xl leading-snug text-customOlive">Verify</h2>
         </CardContent>
       </Link>
-      <CtaRow to="/login" label="Login" />
+      <CtaRow to="/verify" label="Verify Signature" />
     </Card>
   );
 
@@ -162,12 +162,29 @@ const LandingPage = () => {
       />
       <Link to="">
         <CardContent className="space-y-3">
-          <h2 className="text-2xl leading-snug text-customOlive">Read</h2>
+          <h2 className="text-2xl leading-snug text-customOlive">Read Data</h2>
         </CardContent>
       </Link>
-      <CtaRow to="/login" label="Login" />
+      <CtaRow to="/read" label="Read On-chain Data " />
     </Card>
   );
+
+
+    const ConvertorCard = () => (
+    <Card className="flex flex-col rounded-none border-[6px] border-black shadow-[6px_6px_0_0_black]">
+      <div
+        className="w-full h-40 sm:h-52 md:h-60 bg-cover bg-center"
+        style={{ backgroundImage: "url('/chainIcons/verify.png')" }}
+      />
+      <Link to="/converter">
+        <CardContent className="space-y-3">
+          <h2 className="text-2xl leading-snug text-customOlive">Converter</h2>
+        </CardContent>
+      </Link>
+      <CtaRow to="/converter" label="Data Converter" />
+    </Card>
+  );
+
 
   return (
     <div className="bg-black min-h-screen w-full flex flex-col">
@@ -215,9 +232,10 @@ const LandingPage = () => {
           <section className="grid w-full max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {/* i = index to stagger & direction; comingSoon = true except first */}
             <AnimatedCard i={0} comingSoon={false}><SendTxCard /></AnimatedCard>
-            <AnimatedCard i={1} comingSoon={true}><LoginCard /></AnimatedCard>
+            <AnimatedCard i={1} comingSoon={true}><SignCard /></AnimatedCard>
             <AnimatedCard i={2} comingSoon={true}><VerifyCard /></AnimatedCard>
             <AnimatedCard i={3} comingSoon={true}><ReadCard /></AnimatedCard>
+            <AnimatedCard i={4} comingSoon={false}><ConvertorCard /></AnimatedCard>
           </section>
         </div>
       </main>
