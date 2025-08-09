@@ -30,6 +30,8 @@ jobs:
             mkdir -p "$PROJECT_DIR"
             cd "$PROJECT_DIR"
 
+            echo $(pwd)
+            
             # Update repository
             echo "🔄 Updating repository..."
             git fetch --all
