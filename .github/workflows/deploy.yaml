@@ -23,6 +23,9 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           envs: PROJECT_DIR
           script: |
+            # Source the profile to load environment variables
+            source ~/.bashrc || source ~/.profile || true
+            
             echo "🔗 SSH Connection successful!"
             echo "📍 Current directory: $(pwd)"
             echo "👤 Current user: $(whoami)"
