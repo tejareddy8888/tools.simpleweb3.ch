@@ -23,6 +23,11 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           envs: PROJECT_DIR
           script: |
+            # Load NVM properly
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            
             # Source the profile to load environment variables
             source ~/.bashrc || source ~/.profile || true
 
@@ -32,23 +37,28 @@ jobs:
             echo "🏠 Home directory: $HOME"
             echo "📁 Project directory from secret: $PROJECT_DIR"
             echo "💻 System info: $(uname -a)"
+            echo "🛤️ PATH: $PATH"
+            
+            # Now check Node.js and npm after loading NVM
             echo "📦 Node.js version: $(node --version 2>/dev/null || echo 'Node.js not installed')"
             echo "📦 npm version: $(npm --version 2>/dev/null || echo 'npm not installed')"
             echo "📦 nvm version: $(nvm --version 2>/dev/null || echo 'nvm not installed')"
-
-
-            # Try common node installation paths
-            for path in /usr/bin/node /usr/local/bin/node ~/.nvm/versions/node/*/bin/node; do
-              if [ -f "$path" ]; then
-                echo "📦 Found Node.js at: $path ($(${path} --version))"
-                NODE_PATH="$path"
-                NPM_PATH="$(dirname $path)/npm"
-                break
-              fi
-            done
             
+            # Show which node and npm are being used
+            echo "🔍 Node.js location: $(which node 2>/dev/null || echo 'node not found in PATH')"
+            echo "🔍 npm location: $(which npm 2>/dev/null || echo 'npm not found in PATH')"
+            
+            # Try to find npm in the same directory as node
+            NODE_PATH=$(which node 2>/dev/null)
             if [ -n "$NODE_PATH" ]; then
-              echo "📦 npm version: $(${NPM_PATH} --version 2>/dev/null || echo 'npm not found')"
-            else
-              echo "❌ Node.js not found in common locations"
+              NPM_PATH="$(dirname $NODE_PATH)/npm"
+              echo "🔍 Expected npm path: $NPM_PATH"
+              if [ -f "$NPM_PATH" ]; then
+                echo "✅ npm found at expected location"
+                echo "📦 npm version (direct): $($NPM_PATH --version)"
+              else
+                echo "❌ npm not found at expected location"
+                echo "📁 Contents of node bin directory:"
+                ls -la "$(dirname $NODE_PATH)/" | head -10
+              fi
             fi
