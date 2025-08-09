@@ -1,0 +1,52 @@
+name: CI/CD
+
+on:
+  push:
+
+jobs:
+  deploy:
+    name: Deploy to Raspberry Pi
+    environment: raspberry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SSH & Test Connection
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          PROJECT_DIR: ${{ secrets.RPI_TOOLS_DIR }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: PROJECT_DIR
+          script: |
+            # Load NVM properly
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            
+            # Source the profile to load environment variables
+            source ~/.bashrc || source ~/.profile || true
+
+            echo "🔗 SSH Connection successful!"
+            # Use the environment variable passed from GitHub
+            echo "📁 Setting up project directory: $PROJECT_DIR"
+            mkdir -p "$PROJECT_DIR"
+            cd "$PROJECT_DIR"
+
+            # Update repository
+            echo "🔄 Updating repository..."
+            git fetch --all
+            git reset --hard origin/main
+            git clean -fd
+
+            echo "📦 Installing dependencies..."
+            npm ci
+
+            echo "🏗️ Building project..."
+            npm run build
+
+            echo "🚀 Starting/Restarting application..."
