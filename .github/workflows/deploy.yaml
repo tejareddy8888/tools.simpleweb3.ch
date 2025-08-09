@@ -8,7 +8,6 @@ jobs:
     name: Deploy to Raspberry Pi
     environment: raspberry
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,26 +19,38 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            set -e
+          envs: PROJECT_DIR
+        env:
+          PROJECT_DIR: ${{ secrets.RPI_TOOLS_DIR }}
+        script: |
+          set -e
 
-            # Define project directory
-            PROJECT_DIR="${{ secrets.RPI_TOOLS_DIR }}"
-            
-            echo "📁 Setting up project directory..."
-            mkdir -p "$PROJECT_DIR"
-            cd "$PROJECT_DIR"
+          # Check if Node.js is installed, if not install it
+          if ! command -v node &> /dev/null; then
+            echo "📥 Installing Node.js..."
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          else
+            echo "✅ Node.js is already installed: $(node --version)"
+          fi
 
-            echo $(pwd)
-            
-            # Update repository
-            echo "🔄 Updating repository..."
-            git fetch --all
-            git reset --hard origin/main
-            git clean -fd
+          # Verify npm is available
+          npm --version
 
-            echo "📦 Installing dependencies..."
-            npm ci
+          echo "📁 Setting up project directory: $PROJECT_DIR"
+          mkdir -p "$PROJECT_DIR"
+          cd "$PROJECT_DIR"
 
-            echo "🏗️ Building project..."
-            npm run build
+          echo $(pwd)
+          
+          # Update repository
+          echo "🔄 Updating repository..."
+          git fetch --all
+          git reset --hard origin/main
+          git clean -fd
+
+          echo "📦 Installing dependencies..."
+          npm ci
+
+          echo "🏗️ Building project..."
+          npm run build
