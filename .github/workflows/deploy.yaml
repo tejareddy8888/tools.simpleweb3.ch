@@ -34,6 +34,7 @@ jobs:
             echo "💻 System info: $(uname -a)"
             echo "📦 Node.js version: $(node --version 2>/dev/null || echo 'Node.js not installed')"
             echo "📦 npm version: $(npm --version 2>/dev/null || echo 'npm not installed')"
+            echo "📦 nvm version: $(nvm --version 2>/dev/null || echo 'nvm not installed')"
 
 
             # Try common node installation paths
