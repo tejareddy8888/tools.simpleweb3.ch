@@ -25,23 +25,12 @@ jobs:
           script: |
             set -e
 
-            # Check if Node.js is installed, if not install it
-            if ! command -v node &> /dev/null; then
-              echo "📥 Installing Node.js..."
-              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-            else
-              echo "✅ Node.js is already installed: $(node --version)"
-            fi
-
-            # Verify npm is available
-            npm --version
-
             echo "📁 Setting up project directory: $PROJECT_DIR"
             mkdir -p "$PROJECT_DIR"
             cd "$PROJECT_DIR"
 
-            echo $(pwd)
+            # Verify npm is available
+            npm --version
             
             # Update repository
             echo "🔄 Updating repository..."
