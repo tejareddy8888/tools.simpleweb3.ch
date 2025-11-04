@@ -28,6 +28,9 @@ const Header = () => {
               <NavLink to='/' >
                 Home
               </NavLink>
+              <NavLink to='/solana-validator' >
+                Solana Validator
+              </NavLink>
               <NavLink to='/about' >
                 About
               </NavLink>
